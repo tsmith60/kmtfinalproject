@@ -153,10 +153,7 @@ public final class FreeColClient {
         this.headless = headless
             || System.getProperty("java.awt.headless", "false").equals("true");
         if (this.headless) {
-            if (!FreeColDebugger.isInDebugMode()
-                || FreeColDebugger.getDebugRunTurns() <= 0) {
-                fatal(Messages.message("client.headlessDebug"));
-            }
+            isDebugFCClient();
         }
 
         // Get the splash screen up early on to show activity.
@@ -165,22 +162,7 @@ public final class FreeColClient {
         gui.displaySplashScreen(splashStream);
 
         // Look for base data directory.  Failure is fatal.
-        File baseDirectory = FreeColDirectories.getBaseDirectory();
-        FreeColDataFile baseData = null;
-        String ioeMessage = null;
-        if (baseDirectory.exists() && baseDirectory.isDirectory()) {
-            try {
-                baseData = new FreeColDataFile(baseDirectory);
-            } catch (IOException ioe) {
-                ioeMessage = ioe.getMessage();
-            }
-        }
-        if (baseData == null) {
-            fatal(Messages.message(StringTemplate.template("client.baseData")
-                          .addName("%dir%", baseDirectory.getName()))
-                + ((ioeMessage == null) ? "" : "\n" + ioeMessage));
-        }
-        ResourceManager.setBaseMapping(baseData.getResourceMapping());
+        findBaseDirectory();
 
         // Once the basic resources are in place construct other things.
 
@@ -197,7 +179,38 @@ public final class FreeColClient {
         worker = new Worker();
         worker.start();
 
-        // Load resources.
+        
+     // Load resources.
+        //   - base resources
+        //   - resources in the default "classic" ruleset,
+        //   - resources in the default actions
+        //
+        loadRes(fontName);
+        actionManager = new ActionManager(this);
+        actionManager.initializeActions(inGameController, connectController);
+    }
+
+	protected void findBaseDirectory() {
+		File baseDirectory = FreeColDirectories.getBaseDirectory();
+        FreeColDataFile baseData = null;
+        String ioeMessage = null;
+        if (baseDirectory.exists() && baseDirectory.isDirectory()) {
+            try {
+                baseData = new FreeColDataFile(baseDirectory);
+            } catch (IOException ioe) {
+                ioeMessage = ioe.getMessage();
+            }
+        }
+        if (baseData == null) {
+            fatal(Messages.message(StringTemplate.template("client.baseData")
+                          .addName("%dir%", baseDirectory.getName()))
+                + ((ioeMessage == null) ? "" : "\n" + ioeMessage));
+        }
+        ResourceManager.setBaseMapping(baseData.getResourceMapping());
+	}
+
+	protected void loadRes(final String fontName) {
+		// Load resources.
         //   - base resources
         //   - resources in the default "classic" ruleset,
         //   - resources in the default actions
@@ -218,16 +231,25 @@ public final class FreeColClient {
         }
 
         if (!this.headless) {
-            // Swing system and look-and-feel initialization.
-            try {
-                gui.installLookAndFeel(fontName);
-            } catch (Exception e) {
-                fatal(Messages.message("client.laf") + "\n" + e.getMessage());
-            }
+            guiSwingInit(fontName);
         }
-        actionManager = new ActionManager(this);
-        actionManager.initializeActions(inGameController, connectController);
-    }
+	}
+
+	protected void guiSwingInit(final String fontName) {
+		// Swing system and look-and-feel initialization.
+		try {
+		    gui.installLookAndFeel(fontName);
+		} catch (Exception e) {
+		    fatal(Messages.message("client.laf") + "\n" + e.getMessage());
+		}
+	}
+
+	protected void isDebugFCClient() {
+		if (!FreeColDebugger.isInDebugMode()
+		    || FreeColDebugger.getDebugRunTurns() <= 0) {
+		    fatal(Messages.message("client.headlessDebug"));
+		}
+	}
 
     /**
      * Starts the new <code>FreeColClient</code>, including the GUI.
@@ -256,11 +278,7 @@ public final class FreeColClient {
         this.clientOptions.fixClientOptions();
 
         // Reset the mod resources as a result of the client option update.
-        ResourceMapping modMappings = new ResourceMapping();
-        for (FreeColModFile f : this.clientOptions.getActiveMods()) {
-            modMappings.addAll(f.getResourceMapping());
-        }
-        ResourceManager.setModMapping(modMappings);
+        resetModMapppings();
         // Update the actions, resources may have changed.
         if (this.actionManager != null) updateActions();
 
@@ -280,7 +298,22 @@ public final class FreeColClient {
         //   - display the main panel and let the user choose what to
         //     do (which will often be to progress through the
         //     NewPanel to a call to the connect controller to start a game)
-        if (savedGame != null) {
+        introGui(userMsg, showOpeningVideo, savedGame, spec);
+
+        quitGameHelper();
+    }
+
+	protected void introGui(final String userMsg, final boolean showOpeningVideo, final File savedGame,
+			final Specification spec) {
+		    //  - load the saved game if one was supplied
+	        //   - use the debug shortcut to immediately start a new game with
+	        //     supplied specification
+	        //   - display the opening video (which goes on to display the
+	        //     main panel when it completes)
+	        //   - display the main panel and let the user choose what to
+	        //     do (which will often be to progress through the
+	        //     NewPanel to a call to the connect controller to start a game)
+		if (savedGame != null) {
             soundController.playSound("sound.intro.general");
             SwingUtilities.invokeLater(() -> {
                     if (!connectController.startSavedGame(savedGame, userMsg)) {
@@ -304,15 +337,25 @@ public final class FreeColClient {
                     gui.showMainPanel(userMsg);
                 });
         }
+	}
 
-        String quit = FreeCol.CLIENT_THREAD + "Quit Game";
+	protected void resetModMapppings() {
+		ResourceMapping modMappings = new ResourceMapping();
+        for (FreeColModFile f : this.clientOptions.getActiveMods()) {
+            modMappings.addAll(f.getResourceMapping());
+        }
+        ResourceManager.setModMapping(modMappings);
+	}
+
+	private void quitGameHelper() {
+		String quit = FreeCol.CLIENT_THREAD + "Quit Game";
         Runtime.getRuntime().addShutdownHook(new Thread(quit) {
                 @Override
                 public void run() {
                     getConnectController().quitGame(true);
                 }
             });
-    }
+	}
 
     /**
      * Loads the client options.
@@ -809,14 +852,7 @@ public final class FreeColClient {
             String[] flist;
             if (validPeriod != 0L && autoSave != null
                 && (flist = autoSave.list()) != null) {
-                for (String f : flist) {
-                    if (!f.endsWith("." + FreeCol.FREECOL_SAVE_EXTENSION)) continue;
-                    // delete files which are older than user option allows
-                    File saveGameFile = new File(autoSave, f);
-                    if (saveGameFile.lastModified() + validPeriod < timeNow) {
-                        saveGameFile.delete();
-                    }
-                }
+                deleteOlderOptions(validPeriod, timeNow, autoSave, flist);
             }
         } catch (Exception e) {
             logger.log(Level.WARNING, "Failed to delete autosave", e);
@@ -828,4 +864,15 @@ public final class FreeColClient {
         }
         System.exit(0);
     }
+
+	private void deleteOlderOptions(long validPeriod, long timeNow, File autoSave, String[] flist) {
+		for (String f : flist) {
+		    if (!f.endsWith("." + FreeCol.FREECOL_SAVE_EXTENSION)) continue;
+		    // delete files which are older than user option allows
+		    File saveGameFile = new File(autoSave, f);
+		    if (saveGameFile.lastModified() + validPeriod < timeNow) {
+		        saveGameFile.delete();
+		    }
+		}
+	}
 }

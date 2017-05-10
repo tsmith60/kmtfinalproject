@@ -1059,107 +1059,37 @@ public final class InGameController implements NetworkConstants {
 
         // Illegal moves
         case MOVE_NO_ACCESS_BEACHED:
-            if (interactive || clearDestination) {
-                sound("sound.event.illegalMove");
-                StringTemplate nation = getNationAt(unit.getTile(), direction);
-                gui.showInformationMessage(unit, StringTemplate
-                    .template("move.noAccessBeached")
-                    .addStringTemplate("%nation%", nation));
-            }
+            noAccessBleached(unit, direction, interactive, clearDestination);
             break;
         case MOVE_NO_ACCESS_CONTACT:
-            if (interactive || clearDestination) {
-                sound("sound.event.illegalMove");
-                StringTemplate nation = getNationAt(unit.getTile(), direction);
-                gui.showInformationMessage(unit, StringTemplate
-                    .template("move.noAccessContact")
-                    .addStringTemplate("%nation%", nation));
-            }
+            noAccessContact(unit, direction, interactive, clearDestination);
             break;
         case MOVE_NO_ACCESS_GOODS:
-            if (interactive || clearDestination) {
-                sound("sound.event.illegalMove");
-                StringTemplate nation = getNationAt(unit.getTile(), direction);
-                gui.showInformationMessage(unit, StringTemplate
-                    .template("move.noAccessGoods")
-                    .addStringTemplate("%nation%", nation)
-                    .addStringTemplate("%unit%",
-                        unit.getLabel(Unit.UnitLabelType.NATIONAL)));
-            }
+            noAccessGoods(unit, direction, interactive, clearDestination);
             break;
         case MOVE_NO_ACCESS_LAND:
-            if (!moveDisembark(unit, direction)) {
-                if (interactive) {
-                    sound("sound.event.illegalMove");
-                }
-            }
+            noAccessLand(unit, direction, interactive);
             break;
         case MOVE_NO_ACCESS_MISSION_BAN:
-            if (interactive || clearDestination) {
-                sound("sound.event.illegalMove");
-                StringTemplate nation = getNationAt(unit.getTile(), direction);
-                gui.showInformationMessage(unit, StringTemplate
-                    .template("move.noAccessMissionBan")
-                    .addStringTemplate("%unit%",
-                        unit.getLabel(Unit.UnitLabelType.NATIONAL))
-                    .addStringTemplate("%nation%", nation));
-            }
+            noAccessMissionBan(unit, direction, interactive, clearDestination);
             break;
         case MOVE_NO_ACCESS_SETTLEMENT:
-            if (interactive || clearDestination) {
-                sound("sound.event.illegalMove");
-                StringTemplate nation = getNationAt(unit.getTile(), direction);
-                gui.showInformationMessage(unit, StringTemplate
-                    .template("move.noAccessSettlement")
-                    .addStringTemplate("%unit%",
-                        unit.getLabel(Unit.UnitLabelType.NATIONAL))
-                    .addStringTemplate("%nation%", nation));
-            }
+            noAccessSettlement(unit, direction, interactive, clearDestination);
             break;
         case MOVE_NO_ACCESS_SKILL:
-            if (interactive || clearDestination) {
-                sound("sound.event.illegalMove");
-                gui.showInformationMessage(unit, StringTemplate
-                    .template("move.noAccessSkill")
-                    .addStringTemplate("%unit%",
-                        unit.getLabel(Unit.UnitLabelType.NATIONAL)));
-            }
+            noAccessSkill(unit, interactive, clearDestination);
             break;
         case MOVE_NO_ACCESS_TRADE:
-            if (interactive || clearDestination) {
-                sound("sound.event.illegalMove");
-                StringTemplate nation = getNationAt(unit.getTile(), direction);
-                gui.showInformationMessage(unit, StringTemplate
-                    .template("move.noAccessTrade")
-                    .addStringTemplate("%nation%", nation));
-            }
+            noAccessTrade(unit, direction, interactive, clearDestination);
             break;
         case MOVE_NO_ACCESS_WAR:
-            if (interactive || clearDestination) {
-                sound("sound.event.illegalMove");
-                StringTemplate nation = getNationAt(unit.getTile(), direction);
-                gui.showInformationMessage(unit, StringTemplate
-                    .template("move.noAccessWar")
-                    .addStringTemplate("%nation%", nation));
-            }
+            noAccessWar(unit, direction, interactive, clearDestination);
             break;
         case MOVE_NO_ACCESS_WATER:
-            if (interactive || clearDestination) {
-                sound("sound.event.illegalMove");
-                gui.showInformationMessage(unit, StringTemplate
-                    .template("move.noAccessWater")
-                    .addStringTemplate("%unit%",
-                        unit.getLabel(Unit.UnitLabelType.NATIONAL)));
-            }
+            noAccessWater(unit, interactive, clearDestination);
             break;
         case MOVE_NO_ATTACK_MARINE:
-            if (interactive || clearDestination) {
-                sound("sound.event.illegalMove");
-                gui.showInformationMessage(unit, StringTemplate
-                    .template("move.noAttackWater")
-                    .addStringTemplate("%unit%",
-                        unit.getLabel(Unit.UnitLabelType.NATIONAL)));
-            }
+            noAttackMarine(unit, interactive, clearDestination);
             break;
         case MOVE_NO_MOVES:
             // The unit may have some moves left, but not enough
@@ -1170,13 +1100,7 @@ public final class InGameController implements NetworkConstants {
             unit.setState(UnitState.SKIPPED);
             break;
         case MOVE_NO_TILE:
-            if (interactive || clearDestination) {
-                sound("sound.event.illegalMove");
-                gui.showInformationMessage(unit, StringTemplate
-                    .template("move.noTile")
-                    .addStringTemplate("%unit%",
-                        unit.getLabel(Unit.UnitLabelType.NATIONAL)));
-            }
+            noTitle(unit, interactive, clearDestination);
             break;
         default:
             if (interactive || clearDestination) {
@@ -1190,6 +1114,142 @@ public final class InGameController implements NetworkConstants {
         }
         return result;
     }
+
+
+	protected void noTitle(Unit unit, boolean interactive, boolean clearDestination) {
+		if (interactive || clearDestination) {
+		    sound("sound.event.illegalMove");
+		    gui.showInformationMessage(unit, StringTemplate
+		        .template("move.noTile")
+		        .addStringTemplate("%unit%",
+		            unit.getLabel(Unit.UnitLabelType.NATIONAL)));
+		}
+	}
+
+
+	protected void noAttackMarine(Unit unit, boolean interactive, boolean clearDestination) {
+		if (interactive || clearDestination) {
+		    sound("sound.event.illegalMove");
+		    gui.showInformationMessage(unit, StringTemplate
+		        .template("move.noAttackWater")
+		        .addStringTemplate("%unit%",
+		            unit.getLabel(Unit.UnitLabelType.NATIONAL)));
+		}
+	}
+
+
+	protected void noAccessWater(Unit unit, boolean interactive, boolean clearDestination) {
+		if (interactive || clearDestination) {
+		    sound("sound.event.illegalMove");
+		    gui.showInformationMessage(unit, StringTemplate
+		        .template("move.noAccessWater")
+		        .addStringTemplate("%unit%",
+		            unit.getLabel(Unit.UnitLabelType.NATIONAL)));
+		}
+	}
+
+
+	protected void noAccessWar(Unit unit, Direction direction, boolean interactive, boolean clearDestination) {
+		if (interactive || clearDestination) {
+		    sound("sound.event.illegalMove");
+		    StringTemplate nation = getNationAt(unit.getTile(), direction);
+		    gui.showInformationMessage(unit, StringTemplate
+		        .template("move.noAccessWar")
+		        .addStringTemplate("%nation%", nation));
+		}
+	}
+
+
+	protected void noAccessTrade(Unit unit, Direction direction, boolean interactive, boolean clearDestination) {
+		if (interactive || clearDestination) {
+		    sound("sound.event.illegalMove");
+		    StringTemplate nation = getNationAt(unit.getTile(), direction);
+		    gui.showInformationMessage(unit, StringTemplate
+		        .template("move.noAccessTrade")
+		        .addStringTemplate("%nation%", nation));
+		}
+	}
+
+
+	protected void noAccessSkill(Unit unit, boolean interactive, boolean clearDestination) {
+		if (interactive || clearDestination) {
+		    sound("sound.event.illegalMove");
+		    gui.showInformationMessage(unit, StringTemplate
+		        .template("move.noAccessSkill")
+		        .addStringTemplate("%unit%",
+		            unit.getLabel(Unit.UnitLabelType.NATIONAL)));
+		}
+	}
+
+
+	protected void noAccessSettlement(Unit unit, Direction direction, boolean interactive, boolean clearDestination) {
+		if (interactive || clearDestination) {
+		    sound("sound.event.illegalMove");
+		    StringTemplate nation = getNationAt(unit.getTile(), direction);
+		    gui.showInformationMessage(unit, StringTemplate
+		        .template("move.noAccessSettlement")
+		        .addStringTemplate("%unit%",
+		            unit.getLabel(Unit.UnitLabelType.NATIONAL))
+		        .addStringTemplate("%nation%", nation));
+		}
+	}
+
+
+	protected void noAccessMissionBan(Unit unit, Direction direction, boolean interactive, boolean clearDestination) {
+		if (interactive || clearDestination) {
+		    sound("sound.event.illegalMove");
+		    StringTemplate nation = getNationAt(unit.getTile(), direction);
+		    gui.showInformationMessage(unit, StringTemplate
+		        .template("move.noAccessMissionBan")
+		        .addStringTemplate("%unit%",
+		            unit.getLabel(Unit.UnitLabelType.NATIONAL))
+		        .addStringTemplate("%nation%", nation));
+		}
+	}
+
+
+	protected void noAccessLand(Unit unit, Direction direction, boolean interactive) {
+		if (!moveDisembark(unit, direction)) {
+		    if (interactive) {
+		        sound("sound.event.illegalMove");
+		    }
+		}
+	}
+
+
+	protected void noAccessGoods(Unit unit, Direction direction, boolean interactive, boolean clearDestination) {
+		if (interactive || clearDestination) {
+		    sound("sound.event.illegalMove");
+		    StringTemplate nation = getNationAt(unit.getTile(), direction);
+		    gui.showInformationMessage(unit, StringTemplate
+		        .template("move.noAccessGoods")
+		        .addStringTemplate("%nation%", nation)
+		        .addStringTemplate("%unit%",
+		            unit.getLabel(Unit.UnitLabelType.NATIONAL)));
+		}
+	}
+
+
+	protected void noAccessContact(Unit unit, Direction direction, boolean interactive, boolean clearDestination) {
+		if (interactive || clearDestination) {
+		    sound("sound.event.illegalMove");
+		    StringTemplate nation = getNationAt(unit.getTile(), direction);
+		    gui.showInformationMessage(unit, StringTemplate
+		        .template("move.noAccessContact")
+		        .addStringTemplate("%nation%", nation));
+		}
+	}
+
+
+	protected void noAccessBleached(Unit unit, Direction direction, boolean interactive, boolean clearDestination) {
+		if (interactive || clearDestination) {
+		    sound("sound.event.illegalMove");
+		    StringTemplate nation = getNationAt(unit.getTile(), direction);
+		    gui.showInformationMessage(unit, StringTemplate
+		        .template("move.noAccessBeached")
+		        .addStringTemplate("%nation%", nation));
+		}
+	}
 
     /**
      * Follow a path.
@@ -2171,18 +2231,7 @@ public final class InGameController implements NetworkConstants {
         lb.mark();
 
         // Validate the whole route.
-        boolean valid = true;
-        for (TradeRouteStop trs : stops) {
-            if (!TradeRoute.isStopValid(unit, trs)) {
-                lb.add(" ", Messages.message(trs.invalidStopLabel(player)));
-                valid = false;
-            }
-        }
-        if (!valid) {
-            clearOrders(unit);
-            stops.clear();
-            result = unit.getMovesLeft() > 0;
-        }
+        result = validateRoute(unit, player, stops, result, lb);
 
         // Try to find work to do on the current list of stops.
         while (!stops.isEmpty()) {
@@ -2218,11 +2267,7 @@ public final class InGameController implements NetworkConstants {
             }
 
             // At the stop, do the work available.
-            lb.mark();
-            unloadUnitAtStop(unit, lb); // Anything to unload?
-            loadUnitAtStop(unit, lb);   // Anything to load?
-            lb.grew(" ", Messages.message(stop.getLabelFor("tradeRoute.atStop",
-                                                           player)));
+            doAvailWork(unit, player, lb, stop);
 
             // If the un/load consumed the moves, break now before
             // updating the stop.  This allows next turn to retry
@@ -2275,7 +2320,14 @@ public final class InGameController implements NetworkConstants {
             }
         }
 
-        if (lb.grew()) {
+        grewHelper(unit, messages, player, tr, lb);
+        return result;
+    }
+
+
+	protected void grewHelper(Unit unit, List<ModelMessage> messages, final Player player, final TradeRoute tr,
+			LogBuilder lb) {
+		if (lb.grew()) {
             ModelMessage m = new ModelMessage(MessageType.GOODS_MOVEMENT,
                                               "tradeRoute.prefix", unit)
                 .addName("%route%", tr.getName())
@@ -2289,8 +2341,34 @@ public final class InGameController implements NetworkConstants {
                 turnReportMessages.add(m);
             }
         }
-        return result;
-    }
+	}
+
+
+	protected void doAvailWork(Unit unit, final Player player, LogBuilder lb, TradeRouteStop stop) {
+		lb.mark();
+		unloadUnitAtStop(unit, lb); // Anything to unload?
+		loadUnitAtStop(unit, lb);   // Anything to load?
+		lb.grew(" ", Messages.message(stop.getLabelFor("tradeRoute.atStop",
+		                                               player)));
+	}
+
+
+	protected boolean validateRoute(Unit unit, final Player player, final List<TradeRouteStop> stops, boolean result,
+			LogBuilder lb) {
+		boolean valid = true;
+        for (TradeRouteStop trs : stops) {
+            if (!TradeRoute.isStopValid(unit, trs)) {
+                lb.add(" ", Messages.message(trs.invalidStopLabel(player)));
+                valid = false;
+            }
+        }
+        if (!valid) {
+            clearOrders(unit);
+            stops.clear();
+            result = unit.getMovesLeft() > 0;
+        }
+		return result;
+	}
 
     /**
      * Work out what goods to load onto a unit at a stop, and load them.

@@ -302,7 +302,16 @@ public final class ConnectController {
             + "/" + player.getId());
 
         // Reconnect
-        if (msg.getStartGame()) {
+        reconnectToGame(msg, player);
+
+        // All done.
+        freeColClient.setLoggedIn(true);
+        return true;
+    }
+
+
+	protected void reconnectToGame(LoginMessage msg, Player player) {
+		if (msg.getStartGame()) {
             Tile entryTile = (player.getEntryLocation() == null) ? null
                 : player.getEntryLocation().getTile();
             freeColClient.setSinglePlayer(msg.isSinglePlayer());
@@ -325,11 +334,7 @@ public final class ConnectController {
                 }
             }
         }
-
-        // All done.
-        freeColClient.setLoggedIn(true);
-        return true;
-    }
+	}
 
     //
     // There are several ways to start a game.
@@ -399,9 +404,7 @@ public final class ConnectController {
         switch (state) {
         case STARTING_GAME:
             if (!login(FreeCol.getName(), host, port)) return false;
-            gui.showStartGamePanel(freeColClient.getGame(),
-                                   freeColClient.getMyPlayer(), false);
-            freeColClient.setSinglePlayer(false);
+            caseStartGame();
             break;
 
         case IN_GAME:
@@ -416,16 +419,7 @@ public final class ConnectController {
                 return false;
             }
 
-            List<ChoiceItem<String>> choices = new ArrayList<>();
-            for (String n : names) {
-                String nam = Messages.message(StringTemplate
-                    .template("countryName")
-                    .add("%nation%", Messages.nameKey(n)));
-                choices.add(new ChoiceItem<>(nam, n));
-            }
-            String choice = gui.getChoice(null,
-                Messages.message("client.choicePlayer"),
-                "cancel", choices);
+            String choice = choiceHandler(names);
             if (choice == null) return false; // User cancelled
 
             if (!login(Messages.getRulerName(choice), host, port)) {
@@ -441,6 +435,28 @@ public final class ConnectController {
         }
         return true;
     }
+
+
+	protected String choiceHandler(List<String> names) {
+		List<ChoiceItem<String>> choices = new ArrayList<>();
+		for (String n : names) {
+		    String nam = Messages.message(StringTemplate
+		        .template("countryName")
+		        .add("%nation%", Messages.nameKey(n)));
+		    choices.add(new ChoiceItem<>(nam, n));
+		}
+		String choice = gui.getChoice(null,
+		    Messages.message("client.choicePlayer"),
+		    "cancel", choices);
+		return choice;
+	}
+
+
+	protected void caseStartGame() {
+		gui.showStartGamePanel(freeColClient.getGame(),
+		                       freeColClient.getMyPlayer(), false);
+		freeColClient.setSinglePlayer(false);
+	}
 
     /**
      * Starts a new single player game by connecting to the server.
