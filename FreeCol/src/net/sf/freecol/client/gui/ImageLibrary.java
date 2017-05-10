@@ -1201,43 +1201,28 @@ public final class ImageLibrary {
         BufferedImage bi = new BufferedImage(width, height,
             BufferedImage.TYPE_INT_ARGB);
         // draw the string with selected color
-        Graphics2D g2 = bi.createGraphics();
-        g2.setColor(getStringBorderColor(color));
-        g2.setFont(font);
-        g2.drawString(text, 2, fm.getMaxAscent());
+        Graphics2D g2 = drawStringColor(text, color, font, fm, bi);
 
         // draw the border around letters
         int borderWidth = 1;
         int borderColor = getStringBorderColor(color).getRGB();
         int srcRGB, dstRGB, srcA;
-        for (int biY = 0; biY < height; biY++) {
-            for (int biX = borderWidth; biX < width - borderWidth; biX++) {
-                int biXI = width - biX - 1;
-                for (int d = 1; d <= borderWidth; d++) {
-                    // left to right
-                    srcRGB = bi.getRGB(biX, biY);
-                    srcA = (srcRGB >> 24) & 0xFF;
-                    dstRGB = bi.getRGB(biX - d, biY);
-                    if (dstRGB != borderColor) {
-                        if (srcA > 0) {
-                            bi.setRGB(biX, biY, borderColor);
-                            bi.setRGB(biX - d, biY, srcRGB);
-                        }
-                    }
-                    // right to left
-                    srcRGB = bi.getRGB(biXI, biY);
-                    srcA = (srcRGB >> 24) & 0xFF;
-                    dstRGB = bi.getRGB(biXI + d, biY);
-                    if (dstRGB != borderColor) {
-                        if (srcA > 0) {
-                            bi.setRGB(biXI, biY, borderColor);
-                            bi.setRGB(biXI + d, biY, srcRGB);
-                        }
-                    }
-                }
-            }
-        }
-        for (int biX = 0; biX < width; biX++) {
+        drawBorderLet1(width, height, bi, borderWidth, borderColor);
+        drawBorderLet2(width, height, bi, borderWidth, borderColor);
+
+        g2.setColor(color);
+        g2.drawString(text, 2, fm.getMaxAscent());
+        g2.dispose();
+
+        stringImageCache.put(key, bi);
+        return bi;
+    }
+
+	protected void drawBorderLet2(int width, int height, BufferedImage bi, int borderWidth, int borderColor) {
+		int srcRGB;
+		int dstRGB;
+		int srcA;
+		for (int biX = 0; biX < width; biX++) {
             for (int biY = borderWidth; biY < height - borderWidth; biY++) {
                 int biYI = height - biY - 1;
                 for (int d = 1; d <= borderWidth; d++) {
@@ -1264,13 +1249,47 @@ public final class ImageLibrary {
                 }
             }
         }
+	}
 
-        g2.setColor(color);
+	protected void drawBorderLet1(int width, int height, BufferedImage bi, int borderWidth, int borderColor) {
+		int srcRGB;
+		int dstRGB;
+		int srcA;
+		for (int biY = 0; biY < height; biY++) {
+            for (int biX = borderWidth; biX < width - borderWidth; biX++) {
+                int biXI = width - biX - 1;
+                for (int d = 1; d <= borderWidth; d++) {
+                    // left to right
+                    srcRGB = bi.getRGB(biX, biY);
+                    srcA = (srcRGB >> 24) & 0xFF;
+                    dstRGB = bi.getRGB(biX - d, biY);
+                    if (dstRGB != borderColor) {
+                        if (srcA > 0) {
+                            bi.setRGB(biX, biY, borderColor);
+                            bi.setRGB(biX - d, biY, srcRGB);
+                        }
+                    }
+                    // right to left
+                    srcRGB = bi.getRGB(biXI, biY);
+                    srcA = (srcRGB >> 24) & 0xFF;
+                    dstRGB = bi.getRGB(biXI + d, biY);
+                    if (dstRGB != borderColor) {
+                        if (srcA > 0) {
+                            bi.setRGB(biXI, biY, borderColor);
+                            bi.setRGB(biXI + d, biY, srcRGB);
+                        }
+                    }
+                }
+            }
+        }
+	}
+
+	protected Graphics2D drawStringColor(String text, Color color, Font font, FontMetrics fm, BufferedImage bi) {
+		Graphics2D g2 = bi.createGraphics();
+        g2.setColor(getStringBorderColor(color));
+        g2.setFont(font);
         g2.drawString(text, 2, fm.getMaxAscent());
-        g2.dispose();
-
-        stringImageCache.put(key, bi);
-        return bi;
-    }
+		return g2;
+	}
 
 }

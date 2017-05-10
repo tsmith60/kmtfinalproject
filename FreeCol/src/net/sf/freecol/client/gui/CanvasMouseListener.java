@@ -127,34 +127,10 @@ public final class CanvasMouseListener implements ActionListener, MouseListener 
         switch (me) {
         case MouseEvent.BUTTON1:
             // Record initial click point for purposes of dragging
-            canvas.setDragPoint(e.getX(), e.getY());
-            if (canvas.isGotoStarted()) {
-                PathNode path = canvas.getGotoPath();
-                if (path != null) {
-                    canvas.stopGoto();
-                    // Move the unit
-                    freeColClient.getInGameController()
-                        .goToTile(canvas.getActiveUnit(),
-                            path.getLastNode().getTile());
-                }
-            } else if (doubleClickTimer.isRunning()) {
-                doubleClickTimer.stop();
-            } else {
-                centerX = e.getX();
-                centerY = e.getY();
-                doubleClickTimer.start();
-            }
-            canvas.requestFocus();
+            canv1Drag(e);
             break;
         case MouseEvent.BUTTON2:
-            if (tile != null) {
-                Unit unit = canvas.getActiveUnit();
-                if (unit != null && unit.getTile() != tile) {
-                    PathNode dragPath = unit.findPath(tile);
-                    canvas.startGoto();
-                    canvas.setGotoPath(dragPath);
-                }
-            }
+            canv2GoTo(tile);
             break;
         case MouseEvent.BUTTON3:
             // Cancel goto if one is active
@@ -165,6 +141,38 @@ public final class CanvasMouseListener implements ActionListener, MouseListener 
             break;
         }
     }
+
+	protected void canv2GoTo(Tile tile) {
+		if (tile != null) {
+		    Unit unit = canvas.getActiveUnit();
+		    if (unit != null && unit.getTile() != tile) {
+		        PathNode dragPath = unit.findPath(tile);
+		        canvas.startGoto();
+		        canvas.setGotoPath(dragPath);
+		    }
+		}
+	}
+
+	protected void canv1Drag(MouseEvent e) {
+		canvas.setDragPoint(e.getX(), e.getY());
+		if (canvas.isGotoStarted()) {
+		    PathNode path = canvas.getGotoPath();
+		    if (path != null) {
+		        canvas.stopGoto();
+		        // Move the unit
+		        freeColClient.getInGameController()
+		            .goToTile(canvas.getActiveUnit(),
+		                path.getLastNode().getTile());
+		    }
+		} else if (doubleClickTimer.isRunning()) {
+		    doubleClickTimer.stop();
+		} else {
+		    centerX = e.getX();
+		    centerY = e.getY();
+		    doubleClickTimer.start();
+		}
+		canvas.requestFocus();
+	}
 
     /**
      * Invoked when a mouse button was released.

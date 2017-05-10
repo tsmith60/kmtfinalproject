@@ -133,42 +133,57 @@ public final class CanvasMapEditorMouseListener extends AbstractCanvasListener
 
         try {
             if (e.getButton() == MouseEvent.BUTTON1) {
-                Tile tile = canvas.convertToMapTile(e.getX(), e.getY());
-                if (tile != null) getGUI().setSelectedTile(tile);
-                startPoint = endPoint = null;
+                button1Pressed(e);
 
             } else if (e.getButton() == MouseEvent.BUTTON2) {
-                startPoint = e.getPoint();
-                JComponent component = (JComponent)e.getSource();
-                drawBox(component, startPoint, endPoint);
+                button2Pressed(e);
 
             } else if (e.getButton() == MouseEvent.BUTTON3
                 || e.isPopupTrigger()) {
-                startPoint = e.getPoint();
-                Tile tile = canvas.convertToMapTile(e.getX(), e.getY());
-                if (tile != null) {
-                    if (tile.hasRiver()) {
-                        TileImprovement river = tile.getRiver();
-                        String style = canvas.showRiverStyleDialog(tile);
-                        if (style == null) {
-                            // cancelled
-                        } else if (RiverStyleDialog.DELETE.equals(style)) {
-                            tile.getTileItemContainer().removeTileItem(river);
-                        } else {
-                            river.updateRiverConnections(style);
-                        }
-                    }
-                    if (tile.getIndianSettlement() != null) {
-                        canvas.showEditSettlementDialog(tile.getIndianSettlement());
-                    }
-                } else {
-                    getGUI().setSelectedTile(null);
-                }
+                buuton3Press(e);
             }
         } catch (Exception ex) {
             logger.log(Level.WARNING, "Error in mousePressed!", ex);
         }
     }
+
+
+	protected void button1Pressed(MouseEvent e) {
+		Tile tile = canvas.convertToMapTile(e.getX(), e.getY());
+		if (tile != null) getGUI().setSelectedTile(tile);
+		startPoint = endPoint = null;
+	}
+
+
+	protected void button2Pressed(MouseEvent e) {
+		startPoint = e.getPoint();
+		JComponent component = (JComponent)e.getSource();
+		drawBox(component, startPoint, endPoint);
+	}
+
+
+	protected void buuton3Press(MouseEvent e) {
+		startPoint = e.getPoint();
+		Tile tile = canvas.convertToMapTile(e.getX(), e.getY());
+		if (tile != null) {
+		    if (tile.hasRiver()) {
+		        TileImprovement river = tile.getRiver();
+		        String style = canvas.showRiverStyleDialog(tile);
+		        if (style == null) {
+		            // cancelled
+		        } else if (RiverStyleDialog.DELETE.equals(style)) {
+		            tile.getTileItemContainer().removeTileItem(river);
+		        } else {
+		            river.updateRiverConnections(style);
+		        }
+		    }
+		    if (tile.getIndianSettlement() != null) {
+		        canvas.showEditSettlementDialog(tile.getIndianSettlement());
+		    }
+		} else {
+		    getGUI().setSelectedTile(null);
+		}
+	}
 
     /**
      * {@inheritDoc}
@@ -217,7 +232,12 @@ public final class CanvasMapEditorMouseListener extends AbstractCanvasListener
         }
 
         // apply transformation to all tiles in the area
-        Tile t = null;
+        transAllTiles(controller, min_x, max_x, min_y, max_y);
+    }
+
+
+	protected void transAllTiles(final MapEditorController controller, int min_x, int max_x, int min_y, int max_y) {
+		Tile t = null;
         for (int x = min_x; x <= max_x; x++) {
             for (int y = min_y; y <= max_y; y++) {
                 t = getMap().getTile(x, y);
@@ -238,7 +258,7 @@ public final class CanvasMapEditorMouseListener extends AbstractCanvasListener
         }
         getGUI().refresh();
         canvas.requestFocus();
-    }
+	}
 
     /**
      * {@inheritDoc}

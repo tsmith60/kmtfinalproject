@@ -2045,24 +2045,7 @@ public final class MapViewer {
                         if (tile1 != null
                             && ((type == BorderType.COUNTRY && owner.owns(tile1))
                                 || (type == BorderType.REGION && tile1.getRegion() == region))) {
-                            // short straight line
-                            path.lineTo(borderPoints.get(next).x,
-                                        borderPoints.get(next).y);
-                            // big corner
-                            Direction previous = d.getPreviousDirection();
-                            Direction previous2 = previous.getPreviousDirection();
-                            int ddx = 0, ddy = 0;
-                            switch(d) {
-                            case NW: ddy = -tileHeight; break;
-                            case NE: ddx = tileWidth; break;
-                            case SE: ddy = tileHeight; break;
-                            case SW: ddx = -tileWidth; break;
-                            default: break;
-                            }
-                            path.quadTo(controlPoints.get(previous).x + dx,
-                                        controlPoints.get(previous).y + dy,
-                                        borderPoints.get(previous2).x + ddx,
-                                        borderPoints.get(previous2).y + ddy);
+                            drawLineBigCorn(path, d, next, dx, dy);
                         } else {
                             // straight line
                             path.lineTo(borderPoints.get(d).x + dx,
@@ -2079,5 +2062,27 @@ public final class MapViewer {
             g.setStroke(oldStroke);
         }
     }
+
+
+	protected void drawLineBigCorn(GeneralPath path, Direction d, Direction next, int dx, int dy) {
+		// short straight line
+		path.lineTo(borderPoints.get(next).x,
+		            borderPoints.get(next).y);
+		// big corner
+		Direction previous = d.getPreviousDirection();
+		Direction previous2 = previous.getPreviousDirection();
+		int ddx = 0, ddy = 0;
+		switch(d) {
+		case NW: ddy = -tileHeight; break;
+		case NE: ddx = tileWidth; break;
+		case SE: ddy = tileHeight; break;
+		case SW: ddx = -tileWidth; break;
+		default: break;
+		}
+		path.quadTo(controlPoints.get(previous).x + dx,
+		            controlPoints.get(previous).y + dy,
+		            borderPoints.get(previous2).x + ddx,
+		            borderPoints.get(previous2).y + ddy);
+	}
 
 }

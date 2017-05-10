@@ -123,64 +123,10 @@ public final class TilePopup extends JPopupMenu {
 
             // Add move to Europe entry if the unit can do so
             final InGameController igc = freeColClient.getInGameController();
-            if (unitTile == tile && activeUnit.hasHighSeasMove()) {
-                JMenuItem europeMenuItem = Utility.localizedMenuItem(StringTemplate
-                    .template("goToEurope"));
-                europeMenuItem.addActionListener((ActionEvent ae) -> {
-                        if (!freeColClient.currentPlayerIsMyPlayer()) return;
-                        igc.moveTo(activeUnit, player.getEurope());
-                    });
-                add(europeMenuItem);
-                hasAnItem = true;
-            }
+            moveToEurope(freeColClient, tile, player, activeUnit, unitTile, igc);
 
             // Add state changes if present
-            if (unitTile == tile) {
-                JMenuItem ji = null;
-                if (activeUnit.checkSetState(UnitState.ACTIVE)) {
-                    ji = Utility.localizedMenuItem("activateUnit");
-                    ji.addActionListener((ActionEvent ae) -> {
-                            igc.changeState(activeUnit, Unit.UnitState.ACTIVE);
-                        });
-                    add(ji);
-                    hasAnItem = true;
-                }
-                if (activeUnit.checkSetState(UnitState.FORTIFYING)) {
-                    ji = Utility.localizedMenuItem("fortify");
-                    ji.addActionListener((ActionEvent ae) -> {
-                            igc.changeState(activeUnit, Unit.UnitState.FORTIFYING);
-                        });
-                    add(ji);
-                    hasAnItem = true;
-                }
-                if (activeUnit.checkSetState(UnitState.SKIPPED)) {
-                    ji = Utility.localizedMenuItem("skip");
-                    ji.addActionListener((ActionEvent ae) -> {
-                            igc.changeState(activeUnit, Unit.UnitState.SKIPPED);
-                        });
-                    add(ji);
-                    hasAnItem = true;
-                }
-                if (activeUnit.canCarryTreasure()
-                    && activeUnit.canCashInTreasureTrain()) {
-                    ji = Utility.localizedMenuItem("cashInTreasureTrain");
-                    ji.addActionListener((ActionEvent ae) -> {
-                            igc.checkCashInTreasureTrain(activeUnit);
-                        });
-                    ji.setEnabled(true);
-                    add(ji);
-                    hasAnItem = true;
-                }
-
-                if (activeUnit.getDestination() != null) {
-                    ji = Utility.localizedMenuItem("clearOrders");
-                    ji.addActionListener((ActionEvent ae) -> {
-                            igc.clearOrders(activeUnit);
-                        });
-                    add(ji);
-                    hasAnItem = true;
-                }
-            }
+            addStateChange(tile, activeUnit, unitTile, igc);
             if (hasAnItem) addSeparator();
         }
 
@@ -244,6 +190,69 @@ public final class TilePopup extends JPopupMenu {
         }
     }
 
+	protected void addStateChange(final Tile tile, final Unit activeUnit, Tile unitTile, final InGameController igc) {
+		if (unitTile == tile) {
+		    JMenuItem ji = null;
+		    if (activeUnit.checkSetState(UnitState.ACTIVE)) {
+		        ji = Utility.localizedMenuItem("activateUnit");
+		        ji.addActionListener((ActionEvent ae) -> {
+		                igc.changeState(activeUnit, Unit.UnitState.ACTIVE);
+		            });
+		        add(ji);
+		        hasAnItem = true;
+		    }
+		    if (activeUnit.checkSetState(UnitState.FORTIFYING)) {
+		        ji = Utility.localizedMenuItem("fortify");
+		        ji.addActionListener((ActionEvent ae) -> {
+		                igc.changeState(activeUnit, Unit.UnitState.FORTIFYING);
+		            });
+		        add(ji);
+		        hasAnItem = true;
+		    }
+		    if (activeUnit.checkSetState(UnitState.SKIPPED)) {
+		        ji = Utility.localizedMenuItem("skip");
+		        ji.addActionListener((ActionEvent ae) -> {
+		                igc.changeState(activeUnit, Unit.UnitState.SKIPPED);
+		            });
+		        add(ji);
+		        hasAnItem = true;
+		    }
+		    if (activeUnit.canCarryTreasure()
+		        && activeUnit.canCashInTreasureTrain()) {
+		        ji = Utility.localizedMenuItem("cashInTreasureTrain");
+		        ji.addActionListener((ActionEvent ae) -> {
+		                igc.checkCashInTreasureTrain(activeUnit);
+		            });
+		        ji.setEnabled(true);
+		        add(ji);
+		        hasAnItem = true;
+		    }
+
+		    if (activeUnit.getDestination() != null) {
+		        ji = Utility.localizedMenuItem("clearOrders");
+		        ji.addActionListener((ActionEvent ae) -> {
+		                igc.clearOrders(activeUnit);
+		            });
+		        add(ji);
+		        hasAnItem = true;
+		    }
+		}
+	}
+
+	protected void moveToEurope(final FreeColClient freeColClient, final Tile tile, final Player player,
+			final Unit activeUnit, Tile unitTile, final InGameController igc) {
+		if (unitTile == tile && activeUnit.hasHighSeasMove()) {
+		    JMenuItem europeMenuItem = Utility.localizedMenuItem(StringTemplate
+		        .template("goToEurope"));
+		    europeMenuItem.addActionListener((ActionEvent ae) -> {
+		            if (!freeColClient.currentPlayerIsMyPlayer()) return;
+		            igc.moveTo(activeUnit, player.getEurope());
+		        });
+		    add(europeMenuItem);
+		    hasAnItem = true;
+		}
+	}
+
     /**
      * Build the debug entries for the TilePopup.
      *
@@ -261,53 +270,11 @@ public final class TilePopup extends JPopupMenu {
         JMenu changeRole = new JMenu("Change role");
         changeRole.setOpaque(false);
 
-        for (final Unit unit : tile.getUnitList()) {
-            JMenuItem toMenuItem = new JMenuItem(unit.toString());
-            toMenuItem.addActionListener((ActionEvent ae) -> {
-                    DebugUtils.changeOwnership(freeColClient, unit);
-                });
-            changeOwnership.add(toMenuItem);
-
-            if (unit.isCarrier()) {
-                JMenuItem menuItem = new JMenuItem(unit.toString());
-                menuItem.addActionListener((ActionEvent ae) -> {
-                        DebugUtils.displayMission(freeColClient, unit);
-                    });
-                transportLists.add(menuItem);
-            }
-
-            if (unit.isPerson()) {
-                JMenuItem roleMenuItem = new JMenuItem(unit.toString());
-                roleMenuItem.addActionListener((ActionEvent ae) -> {
-                        DebugUtils.changeRole(freeColClient, unit);
-                    });
-                changeRole.add(roleMenuItem);
-            }
-        }
+        unitHandling(freeColClient, tile, changeOwnership, transportLists, changeRole);
         if (transportLists.getItemCount() > 0) add(transportLists);
 
         if (tile.getColony() != null) {
-            if (changeOwnership.getItemCount() > 0) {
-                changeOwnership.addSeparator();
-            }
-            JMenuItem toMenuItem = new JMenuItem(tile.getColony().toString());
-            final Colony colony = tile.getColony();
-            toMenuItem.addActionListener((ActionEvent ae) -> {
-                    DebugUtils.changeOwnership(freeColClient, colony);
-                });
-            changeOwnership.add(toMenuItem);
-
-            JMenuItem displayColonyPlan = new JMenuItem("Display Colony Plan");
-            displayColonyPlan.addActionListener((ActionEvent ae) -> {
-                    DebugUtils.displayColonyPlan(freeColClient, colony);
-                });
-            add(displayColonyPlan);
-
-            JMenuItem applyDisaster = new JMenuItem("Apply Disaster");
-            applyDisaster.addActionListener((ActionEvent ae) -> {
-                    DebugUtils.applyDisaster(freeColClient, colony);
-                });
-            add(applyDisaster);
+            ifColonyExists(freeColClient, tile, changeOwnership);
         }
         if (tile.getIndianSettlement() != null) {
             JMenuItem displayGoods = new JMenuItem("Examine Settlement");
@@ -365,7 +332,18 @@ public final class TilePopup extends JPopupMenu {
             add(menuItem);
         }
 
-        for (Unit u : tile.getUnitList()) {
+        addGoods(freeColClient, tile);
+
+        JMenuItem dumpItem = new JMenuItem("Dump tile");
+        dumpItem.setOpaque(false);
+        dumpItem.addActionListener((ActionEvent ae) -> {
+                DebugUtils.dumpTile(freeColClient, tile);
+            });
+        add(dumpItem);
+    }
+
+	protected void addGoods(final FreeColClient freeColClient, final Tile tile) {
+		for (Unit u : tile.getUnitList()) {
             if (u.canCarryGoods() && u.hasSpaceLeft()) {
                 JMenuItem addg = new JMenuItem("Add goods");
                 addg.setOpaque(false);
@@ -377,14 +355,58 @@ public final class TilePopup extends JPopupMenu {
                 break;
             }
         }
+	}
 
-        JMenuItem dumpItem = new JMenuItem("Dump tile");
-        dumpItem.setOpaque(false);
-        dumpItem.addActionListener((ActionEvent ae) -> {
-                DebugUtils.dumpTile(freeColClient, tile);
-            });
-        add(dumpItem);
-    }
+	protected void ifColonyExists(final FreeColClient freeColClient, final Tile tile, JMenu changeOwnership) {
+		if (changeOwnership.getItemCount() > 0) {
+		    changeOwnership.addSeparator();
+		}
+		JMenuItem toMenuItem = new JMenuItem(tile.getColony().toString());
+		final Colony colony = tile.getColony();
+		toMenuItem.addActionListener((ActionEvent ae) -> {
+		        DebugUtils.changeOwnership(freeColClient, colony);
+		    });
+		changeOwnership.add(toMenuItem);
+
+		JMenuItem displayColonyPlan = new JMenuItem("Display Colony Plan");
+		displayColonyPlan.addActionListener((ActionEvent ae) -> {
+		        DebugUtils.displayColonyPlan(freeColClient, colony);
+		    });
+		add(displayColonyPlan);
+
+		JMenuItem applyDisaster = new JMenuItem("Apply Disaster");
+		applyDisaster.addActionListener((ActionEvent ae) -> {
+		        DebugUtils.applyDisaster(freeColClient, colony);
+		    });
+		add(applyDisaster);
+	}
+
+	protected void unitHandling(final FreeColClient freeColClient, final Tile tile, JMenu changeOwnership,
+			JMenu transportLists, JMenu changeRole) {
+		for (final Unit unit : tile.getUnitList()) {
+            JMenuItem toMenuItem = new JMenuItem(unit.toString());
+            toMenuItem.addActionListener((ActionEvent ae) -> {
+                    DebugUtils.changeOwnership(freeColClient, unit);
+                });
+            changeOwnership.add(toMenuItem);
+
+            if (unit.isCarrier()) {
+                JMenuItem menuItem = new JMenuItem(unit.toString());
+                menuItem.addActionListener((ActionEvent ae) -> {
+                        DebugUtils.displayMission(freeColClient, unit);
+                    });
+                transportLists.add(menuItem);
+            }
+
+            if (unit.isPerson()) {
+                JMenuItem roleMenuItem = new JMenuItem(unit.toString());
+                roleMenuItem.addActionListener((ActionEvent ae) -> {
+                        DebugUtils.changeRole(freeColClient, unit);
+                    });
+                changeRole.add(roleMenuItem);
+            }
+        }
+	}
 
     /**
      * Adds a unit entry to this popup.
