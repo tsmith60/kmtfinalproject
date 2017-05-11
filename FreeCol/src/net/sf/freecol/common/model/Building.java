@@ -327,19 +327,13 @@ public class Building extends WorkLocation
         }
 
         final double epsilon = 0.0001;
-        for (AbstractGoods input : getInputs()) {
-            GoodsType type = input.getType();
-            // maximize consumption
-            int consumption = (int)Math.floor(input.getAmount()
-                * minimumRatio + epsilon);
-            int maximumConsumption = (int)Math.floor(input.getAmount()
-                * maximumRatio);
-            result.addConsumption(new AbstractGoods(type, consumption));
-            if (consumption < maximumConsumption) {
-                result.addMaximumConsumption(new AbstractGoods(type, maximumConsumption));
-            }
-        }
-        for (AbstractGoods output : getOutputs()) {
+        maxConsumption(result, maximumRatio, minimumRatio, epsilon);
+        minProoduction(result, maximumRatio, minimumRatio, epsilon);
+        return result;
+    }
+
+	private void minProoduction(ProductionInfo result, double maximumRatio, double minimumRatio, final double epsilon) {
+		for (AbstractGoods output : getOutputs()) {
             GoodsType type = output.getType();
             // minimize production, but add a magic little something
             // to counter rounding errors
@@ -352,8 +346,22 @@ public class Building extends WorkLocation
                 result.addMaximumProduction(new AbstractGoods(type, maximumProduction));
             }
         }
-        return result;
-    }
+	}
+
+	private void maxConsumption(ProductionInfo result, double maximumRatio, double minimumRatio, final double epsilon) {
+		for (AbstractGoods input : getInputs()) {
+            GoodsType type = input.getType();
+            // maximize consumption
+            int consumption = (int)Math.floor(input.getAmount()
+                * minimumRatio + epsilon);
+            int maximumConsumption = (int)Math.floor(input.getAmount()
+                * maximumRatio);
+            result.addConsumption(new AbstractGoods(type, consumption));
+            if (consumption < maximumConsumption) {
+                result.addMaximumConsumption(new AbstractGoods(type, maximumConsumption));
+            }
+        }
+	}
 
     /**
      * Evaluate this work location for a given player.
