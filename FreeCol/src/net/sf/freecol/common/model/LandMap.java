@@ -384,14 +384,7 @@ public class LandMap {
 
         // Pick a starting position that is sea without neighbouring land.
         if (x < 0 || y < 0) {
-            do {
-                x = randomInt(logger, "LandW", random, 
-                              width - preferredDistanceToEdge * 2)
-                    + preferredDistanceToEdge;
-                y = randomInt(logger, "LandH", random,
-                              height - preferredDistanceToEdge * 2)
-                    + preferredDistanceToEdge;
-            } while (map[x][y] || !isSingleTile(x, y));
+            getStartPosition(preferredDistanceToEdge, random);
         }
 
         newLand[x][y] = true;
@@ -400,40 +393,14 @@ public class LandMap {
         // Add all valid neighbour positions to list
         List<Position> l = new ArrayList<>();
         Position p = new Position(x, y);
-        for (Direction direction : Direction.longSides) {
-            Position n = new Position(p, direction);
-            if (n.isValid(width, height)
-                && isSingleTile(n.getX(), n.getY())
-                && n.getX() > preferredDistanceToEdge
-                && n.getX() < width-preferredDistanceToEdge) {
-                l.add(n);
-            }
-        }
+        addValidNeighbor(preferredDistanceToEdge, l, p);
 
         // Get a random position from the list,
         // set it to land,
         // add its valid neighbours to the list
         int enough = minSize + randomInt(logger, "LandSize", random,
                                          maxSize - minSize + 1);
-        while (size < enough && !l.isEmpty()) {
-            int i = randomInt(logger, "Lsiz", random, l.size());
-            p = l.remove(i);
-
-            if (!newLand[p.getX()][p.getY()]) {
-                newLand[p.getX()][p.getY()] = true;
-                size++;
-
-                for (Direction direction : Direction.longSides) {
-                    Position n = new Position(p, direction);
-                    if (n.isValid(width, height)
-                        && isSingleTile(n.getX(), n.getY())
-                        && n.getX() > preferredDistanceToEdge
-                        && n.getX() < width-preferredDistanceToEdge) {
-                        l.add(n);
-                    }
-                }
-            }
-        }
+        size = getRandomPosition(preferredDistanceToEdge, random, size, newLand, l, enough);
 
         // Add generated land to map if sufficiently large
         if (size >= minSize) {
@@ -448,4 +415,46 @@ public class LandMap {
         }
         return (size >= minSize) ? size : 0;
     }
+
+	private int getRandomPosition(int preferredDistanceToEdge, Random random, int size, boolean[][] newLand,
+			List<Position> l, int enough) {
+		Position p;
+		while (size < enough && !l.isEmpty()) {
+            int i = randomInt(logger, "Lsiz", random, l.size());
+            p = l.remove(i);
+
+            if (!newLand[p.getX()][p.getY()]) {
+                newLand[p.getX()][p.getY()] = true;
+                size++;
+
+                addValidNeighbor(preferredDistanceToEdge, l, p);
+            }
+        }
+		return size;
+	}
+
+	private void addValidNeighbor(int preferredDistanceToEdge, List<Position> l, Position p) {
+		for (Direction direction : Direction.longSides) {
+            Position n = new Position(p, direction);
+            if (n.isValid(width, height)
+                && isSingleTile(n.getX(), n.getY())
+                && n.getX() > preferredDistanceToEdge
+                && n.getX() < width-preferredDistanceToEdge) {
+                l.add(n);
+            }
+        }
+	}
+
+	private void getStartPosition(int preferredDistanceToEdge, Random random) {
+		int x;
+		int y;
+		do {
+		    x = randomInt(logger, "LandW", random, 
+		                  width - preferredDistanceToEdge * 2)
+		        + preferredDistanceToEdge;
+		    y = randomInt(logger, "LandH", random,
+		                  height - preferredDistanceToEdge * 2)
+		        + preferredDistanceToEdge;
+		} while (map[x][y] || !isSingleTile(x, y));
+	}
 }

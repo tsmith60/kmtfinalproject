@@ -280,29 +280,7 @@ public class Building extends WorkLocation
 
         // Then reduce the minimum ratio if some input is in short supply.
         for (AbstractGoods input : getInputs()) {
-            long required = (long)Math.floor(input.getAmount() * minimumRatio);
-            long available = getAvailable(input.getType(), inputs);
-            // Do not allow auto-production to go negative.
-            if (canAutoProduce()) available = Math.max(0, available);
-            // Experts in factory level buildings may produce a
-            // certain amount of goods even when no input is available.
-            // Factories have the EXPERTS_USE_CONNECTIONS ability.
-            if (available < required
-                && hasAbility(Ability.EXPERTS_USE_CONNECTIONS)
-                && spec.getBoolean(GameOptions.EXPERTS_HAVE_CONNECTIONS)) {
-                long minimumGoodsInput = 4 // FIXME: magic number
-                    * (int)getUnitList().stream()
-                        .filter(u -> u.getType() == getExpertUnitType())
-                        .count();
-                if (minimumGoodsInput > available) {
-                    available = minimumGoodsInput;
-                }
-            }
-            // Scale production by limitations on availability.
-            if (available < required) {
-                minimumRatio *= (double)available / required;
-                //maximumRatio = Math.max(maximumRatio, minimumRatio);
-            }
+            minimumRatio = reduceMinRatio(inputs, spec, minimumRatio, input);
         }
 
         // Check whether there is space enough to store the goods
@@ -331,6 +309,34 @@ public class Building extends WorkLocation
         minProoduction(result, maximumRatio, minimumRatio, epsilon);
         return result;
     }
+
+	private double reduceMinRatio(List<AbstractGoods> inputs, final Specification spec, double minimumRatio,
+			AbstractGoods input) {
+		long required = (long)Math.floor(input.getAmount() * minimumRatio);
+		long available = getAvailable(input.getType(), inputs);
+		// Do not allow auto-production to go negative.
+		if (canAutoProduce()) available = Math.max(0, available);
+		// Experts in factory level buildings may produce a
+		// certain amount of goods even when no input is available.
+		// Factories have the EXPERTS_USE_CONNECTIONS ability.
+		if (available < required
+		    && hasAbility(Ability.EXPERTS_USE_CONNECTIONS)
+		    && spec.getBoolean(GameOptions.EXPERTS_HAVE_CONNECTIONS)) {
+		    long minimumGoodsInput = 4 // FIXME: magic number
+		        * (int)getUnitList().stream()
+		            .filter(u -> u.getType() == getExpertUnitType())
+		            .count();
+		    if (minimumGoodsInput > available) {
+		        available = minimumGoodsInput;
+		    }
+		}
+		// Scale production by limitations on availability.
+		if (available < required) {
+		    minimumRatio *= (double)available / required;
+		    //maximumRatio = Math.max(maximumRatio, minimumRatio);
+		}
+		return minimumRatio;
+	}
 
 	private void minProoduction(ProductionInfo result, double maximumRatio, double minimumRatio, final double epsilon) {
 		for (AbstractGoods output : getOutputs()) {

@@ -146,7 +146,12 @@ public class PlayerExploredTile extends FreeColGameObject {
             ok = false;
         }
 
-        Settlement ts = copied.getSettlement();
+        ok = convertSettlement(copied, ok);
+        tile.setCachedTile(player, (ok) ? tile : copied);
+    }
+
+	private boolean convertSettlement(Tile copied, boolean ok) {
+		Settlement ts = copied.getSettlement();
         if (ts instanceof Colony) {
             Colony colony = (Colony)ts;
             if (colonyUnitCount != colony.getUnitCount()) {
@@ -154,27 +159,32 @@ public class PlayerExploredTile extends FreeColGameObject {
                 ok = false;
             }
         } else if (ts instanceof IndianSettlement) {
-            if (missionary == null && mostHated == null && alarm == null) {
-                copied.setSettlement(null);
-            } else {
-                IndianSettlement is = (IndianSettlement)ts;
-                if (missionary != is.getMissionary()) {
-                    // Do not try to be clever with a unit that might be gone.
-                    is.setMissionary(null);
-                    ok = false;
-                }
-                if (mostHated != is.getMostHated()) {
-                    is.setMostHated(mostHated);
-                    ok = false;
-                }
-                if (alarm != is.getAlarm(player)) {
-                    is.setAlarm(player, alarm);
-                    ok = false;
-                }
-            }
+            ok = setSettlement(copied, ok, ts);
         }
-        tile.setCachedTile(player, (ok) ? tile : copied);
-    }
+		return ok;
+	}
+
+	private boolean setSettlement(Tile copied, boolean ok, Settlement ts) {
+		if (missionary == null && mostHated == null && alarm == null) {
+		    copied.setSettlement(null);
+		} else {
+		    IndianSettlement is = (IndianSettlement)ts;
+		    if (missionary != is.getMissionary()) {
+		        // Do not try to be clever with a unit that might be gone.
+		        is.setMissionary(null);
+		        ok = false;
+		    }
+		    if (mostHated != is.getMostHated()) {
+		        is.setMostHated(mostHated);
+		        ok = false;
+		    }
+		    if (alarm != is.getAlarm(player)) {
+		        is.setAlarm(player, alarm);
+		        ok = false;
+		    }
+		}
+		return ok;
+	}
         
 
     // Serialization

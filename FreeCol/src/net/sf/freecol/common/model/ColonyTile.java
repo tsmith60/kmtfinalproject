@@ -208,37 +208,7 @@ public class ColonyTile extends WorkLocation {
 
         // Unattended production is the hard case.
         if (productionType.getUnattended()) {
-            if (newType == null) {
-                // Tile type stays the same, return the sum of any food bonues.
-                return getSpecification().getFoodGoodsTypeList().stream()
-                    .mapToInt(gt -> ti.getBonus(gt)).sum();
-            }
-
-            // Tile type change.
-            final List<AbstractGoods> newProd
-                = newType.getPossibleProduction(true);
-            int food = newProd.stream()
-                .filter(ag -> ag.getType().isFoodType())
-                .mapToInt(AbstractGoods::getAmount).sum();
-            // Get the current food production.  Otherwise for goods
-            // that are being passively produced and consumed, check
-            // if production remains in surplus following a negative change.
-            for (AbstractGoods ag : getProduction()) {
-                final GoodsType goodsType = ag.getType();
-                if (goodsType.isFoodType()) {
-                    food -= ag.getAmount();
-                } else if (colony.isConsuming(goodsType)) {
-                    int change = -ag.getAmount()
-                        + AbstractGoods.getCount(goodsType, newProd);
-                    if (change < 0
-                        && change + colony.getNetProductionOf(goodsType) < 0) {
-                        // The change drives the net production (more?)
-                        // negative.  Do not do this.
-                        return change;
-                    }
-                }
-            }
-            return food;
+            return getFoodBonus(ti, colony, newType);
         }
 
         // Units are present, see what the change would do to their work.
@@ -256,6 +226,40 @@ public class ColonyTile extends WorkLocation {
                 - resource.applyBonus(work, unitType,
                     oldType.getPotentialProduction(work, unitType));
     }
+
+	private int getFoodBonus(TileImprovementType ti, final Colony colony, final TileType newType) {
+		if (newType == null) {
+		    // Tile type stays the same, return the sum of any food bonues.
+		    return getSpecification().getFoodGoodsTypeList().stream()
+		        .mapToInt(gt -> ti.getBonus(gt)).sum();
+		}
+
+		// Tile type change.
+		final List<AbstractGoods> newProd
+		    = newType.getPossibleProduction(true);
+		int food = newProd.stream()
+		    .filter(ag -> ag.getType().isFoodType())
+		    .mapToInt(AbstractGoods::getAmount).sum();
+		// Get the current food production.  Otherwise for goods
+		// that are being passively produced and consumed, check
+		// if production remains in surplus following a negative change.
+		for (AbstractGoods ag : getProduction()) {
+		    final GoodsType goodsType = ag.getType();
+		    if (goodsType.isFoodType()) {
+		        food -= ag.getAmount();
+		    } else if (colony.isConsuming(goodsType)) {
+		        int change = -ag.getAmount()
+		            + AbstractGoods.getCount(goodsType, newProd);
+		        if (change < 0
+		            && change + colony.getNetProductionOf(goodsType) < 0) {
+		            // The change drives the net production (more?)
+		            // negative.  Do not do this.
+		            return change;
+		        }
+		    }
+		}
+		return food;
+	}
         
     /**
      * Evaluate this work location for a given player.
