@@ -356,7 +356,13 @@ public class SimpleCombatModel extends CombatModel {
         }
 
         // Amphibious attack?
-        if (combatIsAmphibious(attacker, defender)) {
+        ambhibiousAttackCheck(attacker, defender, result, spec);
+    }
+
+
+	private void ambhibiousAttackCheck(Unit attacker, FreeColGameObject defender, Set<Modifier> result,
+			final Specification spec) {
+		if (combatIsAmphibious(attacker, defender)) {
             result.addAll(spec.getModifiers(Modifier.AMPHIBIOUS_ATTACK));
         }
 
@@ -373,45 +379,56 @@ public class SimpleCombatModel extends CombatModel {
             }
 
         } else if (combatIsAttack(attacker, defender)) {
-            Unit defenderUnit = (Unit) defender;
-            Tile tile = defenderUnit.getTile();
-            if (tile != null) {
-                if (tile.hasSettlement()) {
-                    // Bombard bonus applies to settlement defence
-                    result.addAll(attacker
-                                  .getModifiers(Modifier.BOMBARD_BONUS));
-
-                    // Popular support bonus
-                    if (combatIsWarOfIndependence(attacker, defender)) {
-                        addPopularSupportBonus((Colony)tile.getSettlement(),
-                                               attacker, result);
-                    }
-                } else {
-                    // Ambush bonus in the open = defender's defence
-                    // bonus, if defender is REF, or attacker is indian.
-                    if (isAmbush(attacker, defender)) {
-                        for (Modifier m : tile.getDefenceModifiers()) {
-                            Modifier mod = new Modifier(Modifier.OFFENCE, m);
-                            mod.setSource(Specification.AMBUSH_BONUS_SOURCE);
-                            result.add(mod);
-                        }
-                    }
-                }
-            }
-
-            // Artillery in the open penalty, attacker must be on a
-            // tile and neither unit can be in a settlement.
-            if (attacker.hasAbility(Ability.BOMBARD)
-                && attacker.getLocation() instanceof Tile
-                && attacker.getSettlement() == null
-                && attacker.getState() != Unit.UnitState.FORTIFIED
-                && defenderUnit.getSettlement() == null) {
-                result.addAll(spec.getModifiers(Modifier.ARTILLERY_IN_THE_OPEN));
-            }
+            attackerAbilityCheck(attacker, defender, result, spec);
         } else {
             throw new IllegalStateException("Bogus combat");
         }
-    }
+	}
+
+
+	private void attackerAbilityCheck(Unit attacker, FreeColGameObject defender, Set<Modifier> result,
+			final Specification spec) {
+		Unit defenderUnit = (Unit) defender;
+		Tile tile = defenderUnit.getTile();
+		applyBonus(attacker, defender, result, tile);
+
+		// Artillery in the open penalty, attacker must be on a
+		// tile and neither unit can be in a settlement.
+		if (attacker.hasAbility(Ability.BOMBARD)
+		    && attacker.getLocation() instanceof Tile
+		    && attacker.getSettlement() == null
+		    && attacker.getState() != Unit.UnitState.FORTIFIED
+		    && defenderUnit.getSettlement() == null) {
+		    result.addAll(spec.getModifiers(Modifier.ARTILLERY_IN_THE_OPEN));
+		}
+	}
+
+
+	private void applyBonus(Unit attacker, FreeColGameObject defender, Set<Modifier> result, Tile tile) {
+		if (tile != null) {
+		    if (tile.hasSettlement()) {
+		        // Bombard bonus applies to settlement defence
+		        result.addAll(attacker
+		                      .getModifiers(Modifier.BOMBARD_BONUS));
+
+		        // Popular support bonus
+		        if (combatIsWarOfIndependence(attacker, defender)) {
+		            addPopularSupportBonus((Colony)tile.getSettlement(),
+		                                   attacker, result);
+		        }
+		    } else {
+		        // Ambush bonus in the open = defender's defence
+		        // bonus, if defender is REF, or attacker is indian.
+		        if (isAmbush(attacker, defender)) {
+		            for (Modifier m : tile.getDefenceModifiers()) {
+		                Modifier mod = new Modifier(Modifier.OFFENCE, m);
+		                mod.setSource(Specification.AMBUSH_BONUS_SOURCE);
+		                result.add(mod);
+		            }
+		        }
+		    }
+		}
+	}
 
     /**
      * Collect all defensive modifiers when defending against an attack.
@@ -710,17 +727,7 @@ public class SimpleCombatModel extends CombatModel {
             // Naval victors get to loot the defenders hold.  Sink the
             // loser on great win/loss, lack of repair location, or
             // beached.
-            if (winner.isNaval() && winner.canCaptureGoods()
-                && !loser.getGoodsList().isEmpty()) {
-                crs.add(CombatResult.LOOT_SHIP);
-            }
-            if (great || loserMustDie
-                || loser.getRepairLocation() == null
-                || loser.isBeached()) {
-                crs.add(CombatResult.SINK_SHIP_ATTACK);
-            } else {
-                crs.add(CombatResult.DAMAGE_SHIP_ATTACK);
-            }
+            lootDefenders(winner, loser, great, crs, loserMustDie);
 
         } else { // loser is land unit
             // Autoequip the defender?
@@ -771,44 +778,8 @@ public class SimpleCombatModel extends CombatModel {
                 }
  
             } else if (settlement instanceof IndianSettlement) {
-                final IndianSettlement is = (IndianSettlement)settlement;
-                // Attacking and defeating the defender of a native
-                // settlement with a mission may yield converts but
-                // also may provoke the burning of all missions.
-                // Native settlements fall when there are no units
-                // present either in-settlement or on the settlement
-                // tile.
-                int lose = 0;
-                if (loserMustDie) {
-                    // Add death of loser before any convert captures,
-                    // or the RNG might randomly decide to convert the
-                    // unit that is then slaughtered.
-                    crs.add(CombatResult.SLAUGHTER_UNIT);
-                    lose++;
-                    // For now, no usual unit combat actions can proceed,
-                    // which means we can not expect to capture equipment
-                    // from settlements without untangling this dependency.
-                    done = true;
-                }
-                if (attackerWon) {
-                    if (r < winner.getConvertProbability()) {
-                        if (is.getUnitCount() + tile.getUnitCount() > lose
-                            && is.hasMissionary(winnerPlayer)
-                            && !combatIsAmphibious(winner, loser)) {
-                            crs.add(CombatResult.CAPTURE_CONVERT);
-                            lose++;
-                        }
-                    } else if (r >= 1.0 - winner.getBurnProbability()) {
-                        if (any(loserPlayer.getIndianSettlements(),
-                                s -> s.hasMissionary(winnerPlayer))) {
-                            crs.add(CombatResult.BURN_MISSIONS);
-                        }
-                    }
-                }
-                if (settlement.getUnitCount() + tile.getUnitCount() <= lose) {
-                    crs.add(CombatResult.DESTROY_SETTLEMENT);
-                    done = true;
-                }
+                done = setSettlement(winner, loser, r, crs, loserPlayer, tile, winnerPlayer, attackerWon, loserMustDie,
+						done, settlement);
             }
 
             if (!done) {
@@ -816,51 +787,7 @@ public class SimpleCombatModel extends CombatModel {
                 // First check if the loser was automatically armed, and
                 // if so see if the winner can capture that equipment,
                 // which may kill or demote the loser.
-                if (autoRole != null) {
-                    crs.add((winner.canCaptureEquipment(autoRole) != null)
-                        ? CombatResult.CAPTURE_AUTOEQUIP
-                        : CombatResult.LOSE_AUTOEQUIP);
-                    if (loserMustDie) {
-                        crs.add(CombatResult.SLAUGHTER_UNIT);
-                    } else if (loser.hasAbility(Ability.DEMOTE_ON_ALL_EQUIPMENT_LOST)) {
-                        crs.add(CombatResult.DEMOTE_UNIT);
-                    }
-
-                // Some losers are just doomed (e.g. seasonedScout), do not
-                // check for capture/demote/lose-equipment.
-                } else if (loserMustDie) {
-                    crs.add(CombatResult.SLAUGHTER_UNIT);
-
-                // Then check if the user had other offensive
-                // role-equipment, that can be captured or lost, which
-                // may kill or demote the loser.
-                } else if (loserRole.isOffensive()) {
-                    crs.add((winner.canCaptureEquipment(loserRole) != null)
-                        ? CombatResult.CAPTURE_EQUIP
-                        : CombatResult.LOSE_EQUIP);
-                    if (loserMustDie
-                        || loser.losingEquipmentKillsUnit()) {
-                        crs.add(CombatResult.SLAUGHTER_UNIT);
-                    } else if (loser.losingEquipmentDemotesUnit()) {
-                        crs.add(CombatResult.DEMOTE_UNIT);
-                    }
-
-                // But some can be captured.
-                } else if (loser.hasAbility(Ability.CAN_BE_CAPTURED)
-                    && winner.hasAbility(Ability.CAPTURE_UNITS)
-                    && !combatIsAmphibious(winner, loser)) {
-                    // Demotion on capture is handled by capture routine.
-                    crs.add(CombatResult.CAPTURE_UNIT);
-
-                // Or losing just causes a demotion.
-                } else if (loser.getTypeChange(ChangeType.DEMOTION,
-                                               loserPlayer) != null) {
-                    crs.add(CombatResult.DEMOTE_UNIT);
-
-                // But finally, the default is to kill them.
-                } else {
-                    crs.add(CombatResult.SLAUGHTER_UNIT);
-                }
+                captureLoserEquipment(winner, loser, crs, loserPlayer, loserMustDie, autoRole, loserRole);
             }
         }
 
@@ -875,6 +802,134 @@ public class SimpleCombatModel extends CombatModel {
             crs.add(CombatResult.PROMOTE_UNIT);
         }
     }
+
+
+	private boolean setSettlement(Unit winner, Unit loser, double r, List<CombatResult> crs, Player loserPlayer,
+			Tile tile, Player winnerPlayer, boolean attackerWon, boolean loserMustDie, boolean done,
+			Settlement settlement) {
+		final IndianSettlement is = (IndianSettlement)settlement;
+		// Attacking and defeating the defender of a native
+		// settlement with a mission may yield converts but
+		// also may provoke the burning of all missions.
+		// Native settlements fall when there are no units
+		// present either in-settlement or on the settlement
+		// tile.
+		int lose = 0;
+		if (loserMustDie) {
+		    // Add death of loser before any convert captures,
+		    // or the RNG might randomly decide to convert the
+		    // unit that is then slaughtered.
+		    crs.add(CombatResult.SLAUGHTER_UNIT);
+		    lose++;
+		    // For now, no usual unit combat actions can proceed,
+		    // which means we can not expect to capture equipment
+		    // from settlements without untangling this dependency.
+		    done = true;
+		}
+		if (attackerWon) {
+		    lose = winnerProbability(winner, loser, r, crs, loserPlayer, tile, winnerPlayer, is, lose);
+		}
+		if (settlement.getUnitCount() + tile.getUnitCount() <= lose) {
+		    crs.add(CombatResult.DESTROY_SETTLEMENT);
+		    done = true;
+		}
+		return done;
+	}
+
+
+	private void captureLoserEquipment(Unit winner, Unit loser, List<CombatResult> crs, Player loserPlayer,
+			boolean loserMustDie, Role autoRole, final Role loserRole) {
+		if (autoRole != null) {
+		    addWinner(winner, loser, crs, loserMustDie, autoRole);
+
+		// Some losers are just doomed (e.g. seasonedScout), do not
+		// check for capture/demote/lose-equipment.
+		} else if (loserMustDie) {
+		    crs.add(CombatResult.SLAUGHTER_UNIT);
+
+		// Then check if the user had other offensive
+		// role-equipment, that can be captured or lost, which
+		// may kill or demote the loser.
+		} else if (loserRole.isOffensive()) {
+		    addWinnerLoserRole(winner, loser, crs, loserMustDie, loserRole);
+
+		// But some can be captured.
+		} else if (loser.hasAbility(Ability.CAN_BE_CAPTURED)
+		    && winner.hasAbility(Ability.CAPTURE_UNITS)
+		    && !combatIsAmphibious(winner, loser)) {
+		    // Demotion on capture is handled by capture routine.
+		    crs.add(CombatResult.CAPTURE_UNIT);
+
+		// Or losing just causes a demotion.
+		} else if (loser.getTypeChange(ChangeType.DEMOTION,
+		                               loserPlayer) != null) {
+		    crs.add(CombatResult.DEMOTE_UNIT);
+
+		// But finally, the default is to kill them.
+		} else {
+		    crs.add(CombatResult.SLAUGHTER_UNIT);
+		}
+	}
+
+
+	private void addWinnerLoserRole(Unit winner, Unit loser, List<CombatResult> crs, boolean loserMustDie,
+			final Role loserRole) {
+		crs.add((winner.canCaptureEquipment(loserRole) != null)
+		    ? CombatResult.CAPTURE_EQUIP
+		    : CombatResult.LOSE_EQUIP);
+		if (loserMustDie
+		    || loser.losingEquipmentKillsUnit()) {
+		    crs.add(CombatResult.SLAUGHTER_UNIT);
+		} else if (loser.losingEquipmentDemotesUnit()) {
+		    crs.add(CombatResult.DEMOTE_UNIT);
+		}
+	}
+
+
+	private void addWinner(Unit winner, Unit loser, List<CombatResult> crs, boolean loserMustDie, Role autoRole) {
+		crs.add((winner.canCaptureEquipment(autoRole) != null)
+		    ? CombatResult.CAPTURE_AUTOEQUIP
+		    : CombatResult.LOSE_AUTOEQUIP);
+		if (loserMustDie) {
+		    crs.add(CombatResult.SLAUGHTER_UNIT);
+		} else if (loser.hasAbility(Ability.DEMOTE_ON_ALL_EQUIPMENT_LOST)) {
+		    crs.add(CombatResult.DEMOTE_UNIT);
+		}
+	}
+
+
+	private int winnerProbability(Unit winner, Unit loser, double r, List<CombatResult> crs, Player loserPlayer,
+			Tile tile, Player winnerPlayer, final IndianSettlement is, int lose) {
+		if (r < winner.getConvertProbability()) {
+		    if (is.getUnitCount() + tile.getUnitCount() > lose
+		        && is.hasMissionary(winnerPlayer)
+		        && !combatIsAmphibious(winner, loser)) {
+		        crs.add(CombatResult.CAPTURE_CONVERT);
+		        lose++;
+		    }
+		} else if (r >= 1.0 - winner.getBurnProbability()) {
+		    if (any(loserPlayer.getIndianSettlements(),
+		            s -> s.hasMissionary(winnerPlayer))) {
+		        crs.add(CombatResult.BURN_MISSIONS);
+		    }
+		}
+		return lose;
+	}
+
+
+	private void lootDefenders(Unit winner, Unit loser, boolean great, List<CombatResult> crs, boolean loserMustDie) {
+		if (winner.isNaval() && winner.canCaptureGoods()
+		    && !loser.getGoodsList().isEmpty()) {
+		    crs.add(CombatResult.LOOT_SHIP);
+		}
+		if (great || loserMustDie
+		    || loser.getRepairLocation() == null
+		    || loser.isBeached()) {
+		    crs.add(CombatResult.SINK_SHIP_ATTACK);
+		} else {
+		    crs.add(CombatResult.DAMAGE_SHIP_ATTACK);
+		}
+	}
 
     /**
      * Could this attack be an ambush?
