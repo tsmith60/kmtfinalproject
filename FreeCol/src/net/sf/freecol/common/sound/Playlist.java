@@ -131,16 +131,7 @@ public final class Playlist {
         }
         else if (num == -1) {
             // Let's pick a first sound.
-            if (pickMode == FORWARDS) {
-                num = 0;
-            }
-            else if (pickMode == BACKWARDS) {
-                num = soundFiles.length - 1;
-            }
-            else { // SHUFFLE mode
-                num = (int)(Math.random() * soundFiles.length);
-                playedSounds[0] = num;
-            }
+            firstSound();
         }
         else if (repeatMode == PLAY_ONE) {
             num = -2;
@@ -150,70 +141,13 @@ public final class Playlist {
         }
         else if (pickMode == SHUFFLE) {
             if (playedSounds[playedSounds.length - 1] != Integer.MAX_VALUE) {
-                if (repeatMode == PLAY_ALL) {
-                    num = -2;
-                }
-                else { // (repeatMode == REPEAT_ALL)
-                    for (int i = 1; i < playedSounds.length; i++) {
-                        playedSounds[i] = Integer.MAX_VALUE;
-                    }
-                    num = (int)(Math.random() * soundFiles.length);
-                    playedSounds[0] = num;
-                }
+                repeat();
             }
             else {
-                int i = 0;
-                for (; i < playedSounds.length; i++) {
-                    if (playedSounds[i] == Integer.MAX_VALUE) {
-                        break;
-                    }
-                }
-
-                int tmp = (int)(Math.random() * (soundFiles.length - i));
-                for (int j = 0; j < i; j++) {
-                    if (tmp < playedSounds[j]) {
-                        num = tmp;
-                        break;
-                    }
-                    else {
-                        tmp++;
-                    }
-                }
-
-                playedSounds[i] = num;
-                Arrays.sort(playedSounds);
+                pickSoundMode();
             }
         } else {
-            switch (repeatMode) {
-            case PLAY_ALL:
-                if (pickMode == FORWARDS) {
-                    num++;
-                    if (num == soundFiles.length) {
-                        num = -2;
-                    }
-                } else { // (pickMode == BACKWARDS)
-                    num--;
-                    if (num == -1) {
-                        num = -2;
-                    }
-                }
-                break;
-            case REPEAT_ALL:
-                if (pickMode == FORWARDS) {
-                    num++;
-                    if (num == soundFiles.length) {
-                        num = 0;
-                    }
-                } else { // (pickMode == BACKWARDS)
-                    num--;
-                    if (num == -1) {
-                        num = soundFiles.length - 1;
-                    }
-                }
-                break;
-            default:
-                break;
-            }
+            playOptions();
         }
         
         if ((num >= 0) && (num < soundFiles.length)) {
@@ -222,6 +156,108 @@ public final class Playlist {
             return null;
         }
     }
+
+
+
+	/**
+	 * 
+	 */
+	public void playOptions() {
+		switch (repeatMode) {
+		case PLAY_ALL:
+		    if (pickMode == FORWARDS) {
+		        num++;
+		        if (num == soundFiles.length) {
+		            num = -2;
+		        }
+		    } else { // (pickMode == BACKWARDS)
+		        num--;
+		        if (num == -1) {
+		            num = -2;
+		        }
+		    }
+		    break;
+		case REPEAT_ALL:
+		    if (pickMode == FORWARDS) {
+		        num++;
+		        if (num == soundFiles.length) {
+		            num = 0;
+		        }
+		    } else { // (pickMode == BACKWARDS)
+		        num--;
+		        if (num == -1) {
+		            num = soundFiles.length - 1;
+		        }
+		    }
+		    break;
+		default:
+		    break;
+		}
+	}
+
+
+
+	/**
+	 * 
+	 */
+	public void pickSoundMode() {
+		int i = 0;
+		for (; i < playedSounds.length; i++) {
+		    if (playedSounds[i] == Integer.MAX_VALUE) {
+		        break;
+		    }
+		}
+
+		int tmp = (int)(Math.random() * (soundFiles.length - i));
+		for (int j = 0; j < i; j++) {
+		    if (tmp < playedSounds[j]) {
+		        num = tmp;
+		        break;
+		    }
+		    else {
+		        tmp++;
+		    }
+		}
+
+		playedSounds[i] = num;
+		Arrays.sort(playedSounds);
+	}
+
+
+
+	/**
+	 * 
+	 */
+	public void repeat() {
+		if (repeatMode == PLAY_ALL) {
+		    num = -2;
+		}
+		else { // (repeatMode == REPEAT_ALL)
+		    for (int i = 1; i < playedSounds.length; i++) {
+		        playedSounds[i] = Integer.MAX_VALUE;
+		    }
+		    num = (int)(Math.random() * soundFiles.length);
+		    playedSounds[0] = num;
+		}
+	}
+
+
+
+	/**
+	 * 
+	 */
+	public void firstSound() {
+		if (pickMode == FORWARDS) {
+		    num = 0;
+		}
+		else if (pickMode == BACKWARDS) {
+		    num = soundFiles.length - 1;
+		}
+		else { // SHUFFLE mode
+		    num = (int)(Math.random() * soundFiles.length);
+		    playedSounds[0] = num;
+		}
+	}
 
     
 
