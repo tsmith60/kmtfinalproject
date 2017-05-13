@@ -116,7 +116,30 @@ public class MissionaryMessage extends DOMMessage {
         }
 
         Unit missionary = is.getMissionary();
-        if (denounce) {
+        getElement(player, unit, is, missionary);
+
+        MoveType type = unit.getMoveType(is.getTile());
+        if (type != MoveType.ENTER_INDIAN_SETTLEMENT_WITH_MISSIONARY) {
+            return DOMMessage.clientError("Unable to enter " + is.getName()
+                + ": " + type.whyIllegal());
+        }
+
+        // Valid, proceed to denounce/establish.
+        return (denounce)
+            ? server.getInGameController()
+                .denounceMission(serverPlayer, unit, is)
+            : server.getInGameController()
+                .establishMission(serverPlayer, unit, is);
+    }
+
+	/**
+	 * @param player
+	 * @param unit
+	 * @param is
+	 * @param missionary
+	 */
+	public Element getElement(Player player, Unit unit, ServerIndianSettlement is, Unit missionary) {
+		if (denounce) {
             if (missionary == null) {
                 return DOMMessage.clientError("Denouncing an empty mission at: "
                     + is.getId());
@@ -136,20 +159,8 @@ public class MissionaryMessage extends DOMMessage {
                     + unitId);
             }
         }
-
-        MoveType type = unit.getMoveType(is.getTile());
-        if (type != MoveType.ENTER_INDIAN_SETTLEMENT_WITH_MISSIONARY) {
-            return DOMMessage.clientError("Unable to enter " + is.getName()
-                + ": " + type.whyIllegal());
-        }
-
-        // Valid, proceed to denounce/establish.
-        return (denounce)
-            ? server.getInGameController()
-                .denounceMission(serverPlayer, unit, is)
-            : server.getInGameController()
-                .establishMission(serverPlayer, unit, is);
-    }
+		return null;
+	}
 
     /**
      * Convert this MissionaryMessage to XML.

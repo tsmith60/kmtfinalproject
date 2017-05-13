@@ -106,20 +106,7 @@ public class ClaimLandMessage extends DOMMessage {
             settlement = player.getOurFreeColGameObject(claimantId,
                                                         Settlement.class);
         } catch (IllegalStateException e) {} // ...as is this one...
-        if (unit != null) {
-            if (unit.getTile() != tile) {
-                return DOMMessage.clientError("Unit not at tile: " + tileId);
-            }
-        } else if (settlement != null) {
-            if (settlement.getOwner().isEuropean()
-                && !settlement.getTile().isAdjacent(tile)) {
-                return DOMMessage.clientError("Settlement can not claim tile: "
-                    + tileId);
-            }
-        } else { // ...but not both of them.
-            return DOMMessage.clientError("Not a unit or settlement: "
-                + claimantId);
-        }
+        getTitle(tile, unit, settlement);
 
         int price;
         try {
@@ -132,7 +119,18 @@ public class ClaimLandMessage extends DOMMessage {
         int value = player.getLandPrice(tile);
         Player owner = tile.getOwner();
         Settlement ownerSettlement = tile.getOwningSettlement();
-        if (owner == null) { // unclaimed, always free
+        ownedStatus(player, tile, settlement, price, value, owner, ownerSettlement);
+
+        // Proceed to claim.  Note, does not require unit, it is only
+        // required for permission checking above.  Settlement is required
+        // to set owning settlement.
+        return server.getInGameController()
+            .claimLand(serverPlayer, tile, settlement, price);
+    }
+
+	public Element ownedStatus(Player player, Tile tile, Settlement settlement, int price, int value, Player owner,
+			Settlement ownerSettlement) {
+		if (owner == null) { // unclaimed, always free
             price = 0;
         } else if (owner == player) { // capture vacant colony tiles only
             if (settlement != null && ownerSettlement != null
@@ -151,34 +149,52 @@ public class ClaimLandMessage extends DOMMessage {
             }
         } else { // natives
             NoClaimReason why = player.canClaimForSettlementReason(tile);
-            switch (why) {
-            case NONE:
-                break; // Succeed.
-            case NATIVES:
-                if (price >= 0) {
-                    if (price < value) {
-                        return DOMMessage.clientError("Can not claim tile "
-                            + tile.getId() + ": insufficient offer.");
-                    }
-                    if (!player.checkGold(price)) {
-                        return DOMMessage.clientError("Can not pay for tile: "
-                            + tile.getId() + ": insufficient funds.");
-                    }
-                    // Succeed, sufficient offer
-                } // else succeed, stealing
-                break;
-            default: // Fail
-                return DOMMessage.clientError("Can not claim tile "
-                    + tile.getId() + ": " + why);
-            }
+            switchElement(player, tile, price, value, why);
         }
+		return null;
+	}
 
-        // Proceed to claim.  Note, does not require unit, it is only
-        // required for permission checking above.  Settlement is required
-        // to set owning settlement.
-        return server.getInGameController()
-            .claimLand(serverPlayer, tile, settlement, price);
-    }
+	public Element getTitle(Tile tile, Unit unit, Settlement settlement) {
+		if (unit != null) {
+            if (unit.getTile() != tile) {
+                return DOMMessage.clientError("Unit not at tile: " + tileId);
+            }
+        } else if (settlement != null) {
+            if (settlement.getOwner().isEuropean()
+                && !settlement.getTile().isAdjacent(tile)) {
+                return DOMMessage.clientError("Settlement can not claim tile: "
+                    + tileId);
+            }
+        } else { // ...but not both of them.
+            return DOMMessage.clientError("Not a unit or settlement: "
+                + claimantId);
+        }
+		return null;
+	}
+
+	public Element switchElement(Player player, Tile tile, int price, int value, NoClaimReason why) {
+		switch (why) {
+		case NONE:
+		    break; // Succeed.
+		case NATIVES:
+		    if (price >= 0) {
+		        if (price < value) {
+		            return DOMMessage.clientError("Can not claim tile "
+		                + tile.getId() + ": insufficient offer.");
+		        }
+		        if (!player.checkGold(price)) {
+		            return DOMMessage.clientError("Can not pay for tile: "
+		                + tile.getId() + ": insufficient funds.");
+		        }
+		        // Succeed, sufficient offer
+		    } // else succeed, stealing
+		    break;
+		default: // Fail
+		    return DOMMessage.clientError("Can not claim tile "
+		        + tile.getId() + ": " + why);
+		}
+		return null;
+	}
 
     /**
      * Convert this ClaimLandMessage to XML.

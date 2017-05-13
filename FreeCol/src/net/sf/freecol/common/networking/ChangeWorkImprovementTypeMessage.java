@@ -105,7 +105,16 @@ public class ChangeWorkImprovementTypeMessage extends DOMMessage {
         TileImprovementType type = server.getSpecification()
             .getTileImprovementType(improvementId);
         TileImprovement improvement;
-        if (type == null) {
+        getImprovementType(unit, tile, type);
+
+        // Proceed to change.
+        return server.getInGameController()
+            .changeWorkImprovementType(serverPlayer, unit, type);
+    }
+
+	private Element getImprovementType(Unit unit, Tile tile, TileImprovementType type) {
+		TileImprovement improvement;
+		if (type == null) {
             return DOMMessage.clientError("Not a tile improvement type: "
                 + improvementId);
         } else if (type.isNatural()) {
@@ -125,11 +134,8 @@ public class ChangeWorkImprovementTypeMessage extends DOMMessage {
                     + improvementId);
             }
         }
-
-        // Proceed to change.
-        return server.getInGameController()
-            .changeWorkImprovementType(serverPlayer, unit, type);
-    }
+		return null;
+	}
 
     /**
      * Convert this ChangeWorkImprovementTypeMessage to XML.
