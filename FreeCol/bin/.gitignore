@@ -1,1 +1,9 @@
-/net/
+# Compiled source #
+###################
+*.com
+*.html
+*.class
+*.dll
+*.exe
+*.o
+*.so
