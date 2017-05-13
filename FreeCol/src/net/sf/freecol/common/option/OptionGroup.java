@@ -233,26 +233,36 @@ public class OptionGroup extends AbstractOption<OptionGroup> {
         }
 
         for (int index = 0; index < options.size(); index++) {
-            Option o = options.get(index);
-            if (id.equals(o.getId())) { // Found it, replace and return true
-                options.remove(index);
-                options.add(index, option);
-                optionMap.put(id, option);
-                logger.finest("Merged option " + id + " into " + this.getId()
-                    + ": " + option.toString() + "/");
-                return true;
-            }
-            if (o instanceof OptionGroup) {
-                OptionGroup og = (OptionGroup)o;
-                if (og.optionMap.containsKey(id) && og.merge(option)) {
-                    optionMap.put(id, option);
-                    return true;
-                }
-            }
+            replaceId(option, id, index);
         }
         logger.warning("Option " + id + " registered but not found!");
         return false;
     }
+
+	/**
+	 * @param option
+	 * @param id
+	 * @param index
+	 */
+	public boolean replaceId(Option option, final String id, int index) {
+		Option o = options.get(index);
+		if (id.equals(o.getId())) { // Found it, replace and return true
+		    options.remove(index);
+		    options.add(index, option);
+		    optionMap.put(id, option);
+		    logger.finest("Merged option " + id + " into " + this.getId()
+		        + ": " + option.toString() + "/");
+		    return true;
+		}
+		if (o instanceof OptionGroup) {
+		    OptionGroup og = (OptionGroup)o;
+		    if (og.optionMap.containsKey(id) && og.merge(option)) {
+		        optionMap.put(id, option);
+		        return true;
+		    }
+		}
+		return true;
+	}
         
     /**
      * Helper function to recursively add option group members to the
