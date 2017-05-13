@@ -89,43 +89,13 @@ public final class DragListener extends MouseAdapter {
                 menu.remove(lastIdx);
             if (menu.getComponentCount() <= 0) return;
 
-            final SwingGUI gui = (SwingGUI)freeColClient.getGUI();
-            boolean windows = System.getProperty("os.name").startsWith("Windows");
-            boolean small = Toolkit.getDefaultToolkit()
-                .getScreenSize().getHeight() < 768;
-            if (gui.isWindowed() && windows) {
-                // Work-around: JRE on Windows is unable to
-                // display popup menus that extend beyond the canvas.
-                menu.show(gui.getCanvas(), menu.getLocation().x, 0);
-            } else if (!gui.isWindowed() && small) {
-                // Move popup up when in full screen mode and when
-                // the screen size is too small to fit.  Similar
-                // to above workaround, but targeted for users
-                // with smaller screens such as netbooks.
-                menu.show(gui.getCanvas(), menu.getLocation().x, 0);
-            } else {
-                menu.show(comp, e.getX(), e.getY());
-            }
+            handlePopUpSwing(e, comp, menu);
 
         } else {
             if (comp instanceof AbstractGoodsLabel) {
-                AbstractGoodsLabel label = (AbstractGoodsLabel)comp;
-                if (e.isShiftDown()) {
-                    label.setPartialChosen(true);
-                } else if (e.isControlDown()) {
-                    label.setFullChosen(true);
-                } else {
-                    label.setPartialChosen(false);
-                    label.setDefaultAmount();
-                }
+                handleAbstractGood(e, comp);
             } else if (comp instanceof UnitLabel) {
-                UnitLabel label = (UnitLabel)comp;
-                Unit u = label.getUnit();
-                if (u.isCarrier()
-                    && !u.isAtSea()
-                    && parentPanel instanceof PortPanel) {
-                    ((PortPanel)parentPanel).setSelectedUnitLabel(label);
-                }
+                handleUnitLabel(comp);
             }
 
             TransferHandler handler = comp.getTransferHandler();
@@ -134,4 +104,49 @@ public final class DragListener extends MouseAdapter {
             }
         }
     }
+
+
+	protected void handleUnitLabel(JComponent comp) {
+		UnitLabel label = (UnitLabel)comp;
+		Unit u = label.getUnit();
+		if (u.isCarrier()
+		    && !u.isAtSea()
+		    && parentPanel instanceof PortPanel) {
+		    ((PortPanel)parentPanel).setSelectedUnitLabel(label);
+		}
+	}
+
+
+	protected void handleAbstractGood(MouseEvent e, JComponent comp) {
+		AbstractGoodsLabel label = (AbstractGoodsLabel)comp;
+		if (e.isShiftDown()) {
+		    label.setPartialChosen(true);
+		} else if (e.isControlDown()) {
+		    label.setFullChosen(true);
+		} else {
+		    label.setPartialChosen(false);
+		    label.setDefaultAmount();
+		}
+	}
+
+
+	protected void handlePopUpSwing(MouseEvent e, JComponent comp, QuickActionMenu menu) {
+		final SwingGUI gui = (SwingGUI)freeColClient.getGUI();
+		boolean windows = System.getProperty("os.name").startsWith("Windows");
+		boolean small = Toolkit.getDefaultToolkit()
+		    .getScreenSize().getHeight() < 768;
+		if (gui.isWindowed() && windows) {
+		    // Work-around: JRE on Windows is unable to
+		    // display popup menus that extend beyond the canvas.
+		    menu.show(gui.getCanvas(), menu.getLocation().x, 0);
+		} else if (!gui.isWindowed() && small) {
+		    // Move popup up when in full screen mode and when
+		    // the screen size is too small to fit.  Similar
+		    // to above workaround, but targeted for users
+		    // with smaller screens such as netbooks.
+		    menu.show(gui.getCanvas(), menu.getLocation().x, 0);
+		} else {
+		    menu.show(comp, e.getX(), e.getY());
+		}
+	}
 }

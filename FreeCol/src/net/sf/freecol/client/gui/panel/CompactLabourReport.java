@@ -343,31 +343,7 @@ public final class CompactLabourReport extends ReportPanel {
 
         int studentCount = data.getStudents();
         if (studentCount > 0) {
-            if (allColonists) {
-                addRow(data, null, Messages.message("report.labour.sutdent"), createNonCountedLabel(studentCount), 0, row);
-            } else {
-                Set<UnitType> resultOfTraining = new LinkedHashSet<>();
-                if (colony != null) {
-                    for (Unit teacher : colony.getTeachers()) {
-                        Unit student = teacher.getStudent();
-                        if (student != null && student.getType() == unitType) {
-                            resultOfTraining.add(Unit.getUnitTypeTeaching(teacher.getType(), student.getType()));
-                        }
-                    }
-                }
-
-                String student = resultOfTraining.size() == 1 ?
-                    Messages.message(StringTemplate
-                        .template("report.labour.learning")
-                        .addName("%unit%", resultOfTraining.iterator().next())) :
-                    Messages.message("report.labour.learningOther");
-                addRow(data,
-                       data.getUnitData().getUnitName(),
-                       student,
-                       createNumberLabel(-studentCount, "report.labour.subtracted.tooltip"),
-                       0, row);
-            }
-            row++;
+            row = lowStudentCount(data, colony, row, allColonists, unitType, studentCount);
         }
 
         if (showBuildings && row > buildingStartRow) {
@@ -387,6 +363,36 @@ public final class CompactLabourReport extends ReportPanel {
 
         return row;
     }
+
+	protected int lowStudentCount(LabourData.LocationData data, Colony colony, int row, boolean allColonists,
+			UnitType unitType, int studentCount) {
+		if (allColonists) {
+		    addRow(data, null, Messages.message("report.labour.sutdent"), createNonCountedLabel(studentCount), 0, row);
+		} else {
+		    Set<UnitType> resultOfTraining = new LinkedHashSet<>();
+		    if (colony != null) {
+		        for (Unit teacher : colony.getTeachers()) {
+		            Unit student = teacher.getStudent();
+		            if (student != null && student.getType() == unitType) {
+		                resultOfTraining.add(Unit.getUnitTypeTeaching(teacher.getType(), student.getType()));
+		            }
+		        }
+		    }
+
+		    String student = resultOfTraining.size() == 1 ?
+		        Messages.message(StringTemplate
+		            .template("report.labour.learning")
+		            .addName("%unit%", resultOfTraining.iterator().next())) :
+		        Messages.message("report.labour.learningOther");
+		    addRow(data,
+		           data.getUnitData().getUnitName(),
+		           student,
+		           createNumberLabel(-studentCount, "report.labour.subtracted.tooltip"),
+		           0, row);
+		}
+		row++;
+		return row;
+	}
 
     private void addLocations() {
         LabourData.LocationData unitTotal = unitData.getTotal();

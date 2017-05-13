@@ -99,39 +99,39 @@ public class BuildingToolTip extends JToolTip {
         if (production == null || production.getAmount() <= 0) {
             add(new JLabel(), "span");
         } else {
-            AbstractGoods maxProduction = (info == null
-                || info.getMaximumProduction().isEmpty()) ? null
-                : info.getMaximumProduction().get(0);
-            ProductionLabel productionOutput
-                = new ProductionLabel(freeColClient, production,
-                    ((maxProduction == null) ? production
-                        : maxProduction).getAmount());
-            if (consumption == null) {
-                add(productionOutput, "span");
-            } else if (consumption.getAmount() > 0) {
-                AbstractGoods maxConsumption = (info == null
-                    || info.getMaximumConsumption().isEmpty()) ? null
-                    : info.getMaximumConsumption().get(0);
-                ProductionLabel productionInput
-                    = new ProductionLabel(freeColClient, consumption,
-                        ((maxConsumption == null) ? consumption
-                            : maxConsumption).getAmount());
-                add(productionInput, "span, split 3");
-                add(arrow);
-                add(productionOutput);
-            } else {
-                add(new JLabel(new ImageIcon(lib
-                            .getIconImage(consumption.getType()))),
-                    "span, split 3");
-                add(arrow);
-                add(new JLabel(new ImageIcon(lib
-                            .getIconImage(production.getType()))));
-            }
+            productionValueLow(freeColClient, lib, info, production, consumption);
         }
 
         add(new JLabel(new ImageIcon(lib.getBuildingImage(building))));
 
-        for (Unit unit : building.getUnitList()) {
+        buildUsingUnit(freeColClient, building, output);
+
+        int diff = building.getUnitCapacity() - building.getUnitCount();
+        for (int index = 0; index < diff; index++) {
+            add(new JLabel(new ImageIcon(
+                lib.getMiscImage("image.unit.placeholder"))), "span 2");
+        }
+
+        int breedingNumber = (output == null) ? GoodsType.INFINITY
+            : output.getBreedingNumber();
+        if (breedingNumber < GoodsType.INFINITY
+            && breedingNumber > building.getColony().getGoodsCount(output)) {
+            add(Utility.localizedLabel(StringTemplate
+                    .template("buildingToolTip.breeding")
+                    .addAmount("%number%", breedingNumber)
+                    .addNamed("%goods%", output)));
+        }
+
+        if (FreeColDebugger.isInDebugMode(FreeColDebugger.DebugMode.MENUS)) {
+            isInDebugMode(building, game, output);
+        }
+
+        setPreferredSize(layout.preferredLayoutSize(this));
+    }
+
+
+	protected void buildUsingUnit(FreeColClient freeColClient, Building building, final GoodsType output) {
+		for (Unit unit : building.getUnitList()) {
             UnitLabel unitLabel = new UnitLabel(freeColClient, unit, false);
             int amount = building.getUnitProduction(unit, output);
             if (amount > 0) {
@@ -153,46 +153,62 @@ public class BuildingToolTip extends JToolTip {
                 add(unitLabel, "span 2");
             }
         }
+	}
 
-        int diff = building.getUnitCapacity() - building.getUnitCount();
-        for (int index = 0; index < diff; index++) {
-            add(new JLabel(new ImageIcon(
-                lib.getMiscImage("image.unit.placeholder"))), "span 2");
-        }
 
-        int breedingNumber = (output == null) ? GoodsType.INFINITY
-            : output.getBreedingNumber();
-        if (breedingNumber < GoodsType.INFINITY
-            && breedingNumber > building.getColony().getGoodsCount(output)) {
-            add(Utility.localizedLabel(StringTemplate
-                    .template("buildingToolTip.breeding")
-                    .addAmount("%number%", breedingNumber)
-                    .addNamed("%goods%", output)));
-        }
+	protected void productionValueLow(FreeColClient freeColClient, final ImageLibrary lib, ProductionInfo info,
+			AbstractGoods production, AbstractGoods consumption) {
+		AbstractGoods maxProduction = (info == null
+		    || info.getMaximumProduction().isEmpty()) ? null
+		    : info.getMaximumProduction().get(0);
+		ProductionLabel productionOutput
+		    = new ProductionLabel(freeColClient, production,
+		        ((maxProduction == null) ? production
+		            : maxProduction).getAmount());
+		if (consumption == null) {
+		    add(productionOutput, "span");
+		} else if (consumption.getAmount() > 0) {
+		    AbstractGoods maxConsumption = (info == null
+		        || info.getMaximumConsumption().isEmpty()) ? null
+		        : info.getMaximumConsumption().get(0);
+		    ProductionLabel productionInput
+		        = new ProductionLabel(freeColClient, consumption,
+		            ((maxConsumption == null) ? consumption
+		                : maxConsumption).getAmount());
+		    add(productionInput, "span, split 3");
+		    add(arrow);
+		    add(productionOutput);
+		} else {
+		    add(new JLabel(new ImageIcon(lib
+		                .getIconImage(consumption.getType()))),
+		        "span, split 3");
+		    add(arrow);
+		    add(new JLabel(new ImageIcon(lib
+		                .getIconImage(production.getType()))));
+		}
+	}
 
-        if (FreeColDebugger.isInDebugMode(FreeColDebugger.DebugMode.MENUS)) {
-            List<Modifier> modifiers = new ArrayList<>();
-            if (output != null) {
-                modifiers.addAll(building.getProductionModifiers(output, null));
-            }
-            Collections.sort(modifiers);
-            for (Modifier m : modifiers) {
-                JLabel[] mLabels = ModifierFormat.getModifierLabels(m, null,
-                        game.getTurn());
-                for (int i = 0; i < mLabels.length; i++) {
-                    if (mLabels[i] != null) {
-                        if (i == 0) {
-                            add(mLabels[i],"newline");
-                        } else {
-                            add(mLabels[i]);
-                        }
-                    }
-                }
-            }
-        }
 
-        setPreferredSize(layout.preferredLayoutSize(this));
-    }
+	protected void isInDebugMode(Building building, final Game game, final GoodsType output) {
+		List<Modifier> modifiers = new ArrayList<>();
+		if (output != null) {
+		    modifiers.addAll(building.getProductionModifiers(output, null));
+		}
+		Collections.sort(modifiers);
+		for (Modifier m : modifiers) {
+		    JLabel[] mLabels = ModifierFormat.getModifierLabels(m, null,
+		            game.getTurn());
+		    for (int i = 0; i < mLabels.length; i++) {
+		        if (mLabels[i] != null) {
+		            if (i == 0) {
+		                add(mLabels[i],"newline");
+		            } else {
+		                add(mLabels[i]);
+		            }
+		        }
+		    }
+		}
+	}
 
 
     // Override Component

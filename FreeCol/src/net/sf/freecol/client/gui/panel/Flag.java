@@ -521,36 +521,7 @@ public class Flag {
 
         // draw decoration
         GeneralPath decorationShape = null;
-        switch(decoration) {
-        case GREEK_CROSS:
-        case CROSS:
-        case SCANDINAVIAN_CROSS:
-            decorationShape = getCross(decoration);
-            break;
-        case CHEVRON:
-            decorationShape = getTriangle(UnionShape.CHEVRON, false);
-            break;
-        case PALL:
-            decorationShape = getPall();
-            break;
-        case BEND:
-            decorationShape = getBend(false);
-            break;
-        case BEND_SINISTER:
-            decorationShape = getBend(true);
-            break;
-        case SALTIRE:
-            decorationShape = getBend(true);
-            decorationShape.append(getBend(false), false);
-            break;
-        case SALTIRE_AND_CROSS:
-            decorationShape = getBend(true);
-            decorationShape.append(getBend(false), false);
-            decorationShape.append(getCross(Decoration.CROSS), false);
-            break;
-        default:
-            break;
-        }
+        decorationShape = drawDecoration(decorationShape);
         if (decorationShape != null) {
             g.setColor(decorationColor);
             g.fill(decorationShape);
@@ -564,7 +535,17 @@ public class Flag {
         GeneralPath union = null;
         GeneralPath starShape = null;
         // draw union
-        if (unionShape == null && decoration != null) {
+        starShape = drawUnion(g, union, starShape);
+        if (starShape != null) {
+            g.setColor(starColor);
+            g.fill(starShape);
+        }
+        g.dispose();
+        return image;
+    }
+
+	protected GeneralPath drawUnion(Graphics2D g, GeneralPath union, GeneralPath starShape) {
+		if (unionShape == null && decoration != null) {
             unionShape = decoration.unionShape;
         }
         switch(unionShape) {
@@ -601,13 +582,42 @@ public class Flag {
             g.setColor(unionColor);
             g.fill(union);
         }
-        if (starShape != null) {
-            g.setColor(starColor);
-            g.fill(starShape);
+		return starShape;
+	}
+
+	protected GeneralPath drawDecoration(GeneralPath decorationShape) {
+		switch(decoration) {
+        case GREEK_CROSS:
+        case CROSS:
+        case SCANDINAVIAN_CROSS:
+            decorationShape = getCross(decoration);
+            break;
+        case CHEVRON:
+            decorationShape = getTriangle(UnionShape.CHEVRON, false);
+            break;
+        case PALL:
+            decorationShape = getPall();
+            break;
+        case BEND:
+            decorationShape = getBend(false);
+            break;
+        case BEND_SINISTER:
+            decorationShape = getBend(true);
+            break;
+        case SALTIRE:
+            decorationShape = getBend(true);
+            decorationShape.append(getBend(false), false);
+            break;
+        case SALTIRE_AND_CROSS:
+            decorationShape = getBend(true);
+            decorationShape.append(getBend(false), false);
+            decorationShape.append(getCross(Decoration.CROSS), false);
+            break;
+        default:
+            break;
         }
-        g.dispose();
-        return image;
-    }
+		return decorationShape;
+	}
 
     /**
      * Return the stars in a rectangular "union", distributed

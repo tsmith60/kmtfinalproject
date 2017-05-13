@@ -289,7 +289,59 @@ public final class MiniMap extends JPanel implements MouseInputListener {
         final ClientOptions clientOptions = freeColClient.getClientOptions();
 
         // Row per row; start with the top modified row
-        for (int row = firstRow; row <= lastRow; row++) {
+        rowPerRow(g, map, lastRow, lastColumn, tileWidth, halfWidth, halfHeight, tilePath, settlementPath, unitPath,
+				paintFull, baseTransform, clientOptions);
+
+        /* Defines where to draw the white rectangle on the mini map.
+         * miniRectX/Y are the center of the rectangle.
+         * Use miniRectWidth/Height / 2 to get the upper left corner.
+         * x/yTiles are the number of tiles that fit on the large map */
+        if (getParent() != null) {
+            int miniRectX = (gui.getFocus().getX() - firstColumn) * tileSize;
+            int miniRectY = (gui.getFocus().getY() - firstRow) * tileSize / 4;
+            Dimension mapTileSize = library.scaleDimension(ImageLibrary.TILE_SIZE);
+            int miniRectWidth = (getParent().getWidth() / mapTileSize.width + 1) * tileSize;
+            int miniRectHeight = (getParent().getHeight() / mapTileSize.height + 1) * tileSize / 2;
+            if (miniRectX + miniRectWidth / 2 > width) {
+                miniRectX = width - miniRectWidth / 2 - 1;
+            } else if (miniRectX - miniRectWidth / 2 < 0) {
+                miniRectX = miniRectWidth / 2;
+            }
+            if (miniRectY + miniRectHeight / 2 > height) {
+                miniRectY = height - miniRectHeight / 2 - 1;
+            } else if (miniRectY - miniRectHeight / 2 < 0) {
+                miniRectY = miniRectHeight / 2;
+            }
+
+            g.setColor(ResourceManager.getColor("color.border.MiniMap"));
+            // Use Math max and min to prevent the rect from being larger than the minimap.
+            int miniRectMaxX = Math.max(miniRectX - miniRectWidth / 2, 0);
+            int miniRectMaxY = Math.max(miniRectY - miniRectHeight / 2, 0);
+            int miniRectMinWidth = Math.min(miniRectWidth, width - 1);
+            int miniRectMinHeight = Math.min(miniRectHeight, height - 1);
+            // Prevent the rect from overlapping the bigger adjust rect
+            if(miniRectMaxX + miniRectMinWidth > width - 1) {
+                miniRectMaxX = width - miniRectMinWidth - 1;
+            }
+            if(miniRectMaxY + miniRectMinHeight > height - 1) {
+                miniRectMaxY = height - miniRectMinHeight - 1;
+            }
+            // Draw the rect.
+            g.drawRect(miniRectMaxX, miniRectMaxY, miniRectMinWidth, miniRectMinHeight);
+            // Draw an additional rect, if the whole map is shown on the minimap
+            if (adjustX > 0 && adjustY > 0) {
+                g.setColor(ResourceManager.getColor("color.border.MiniMap"));
+                g.drawRect(0, 0, width - 1, height - 1);
+            }
+        }
+        g.setTransform(originTransform);
+    }
+
+	protected void rowPerRow(final Graphics2D g, final Map map, int lastRow, int lastColumn, int tileWidth,
+			int halfWidth, int halfHeight, GeneralPath tilePath, GeneralPath settlementPath, GeneralPath unitPath,
+			GeneralPath paintFull, AffineTransform baseTransform, final ClientOptions clientOptions) {
+		AffineTransform rowTransform;
+		for (int row = firstRow; row <= lastRow; row++) {
             rowTransform = g.getTransform();
             if ((row & 1) == 1) {
                 g.translate(halfWidth, 0);
@@ -343,51 +395,7 @@ public final class MiniMap extends JPanel implements MouseInputListener {
             g.translate(0, halfHeight);
         }
         g.setTransform(baseTransform);
-
-        /* Defines where to draw the white rectangle on the mini map.
-         * miniRectX/Y are the center of the rectangle.
-         * Use miniRectWidth/Height / 2 to get the upper left corner.
-         * x/yTiles are the number of tiles that fit on the large map */
-        if (getParent() != null) {
-            int miniRectX = (gui.getFocus().getX() - firstColumn) * tileSize;
-            int miniRectY = (gui.getFocus().getY() - firstRow) * tileSize / 4;
-            Dimension mapTileSize = library.scaleDimension(ImageLibrary.TILE_SIZE);
-            int miniRectWidth = (getParent().getWidth() / mapTileSize.width + 1) * tileSize;
-            int miniRectHeight = (getParent().getHeight() / mapTileSize.height + 1) * tileSize / 2;
-            if (miniRectX + miniRectWidth / 2 > width) {
-                miniRectX = width - miniRectWidth / 2 - 1;
-            } else if (miniRectX - miniRectWidth / 2 < 0) {
-                miniRectX = miniRectWidth / 2;
-            }
-            if (miniRectY + miniRectHeight / 2 > height) {
-                miniRectY = height - miniRectHeight / 2 - 1;
-            } else if (miniRectY - miniRectHeight / 2 < 0) {
-                miniRectY = miniRectHeight / 2;
-            }
-
-            g.setColor(ResourceManager.getColor("color.border.MiniMap"));
-            // Use Math max and min to prevent the rect from being larger than the minimap.
-            int miniRectMaxX = Math.max(miniRectX - miniRectWidth / 2, 0);
-            int miniRectMaxY = Math.max(miniRectY - miniRectHeight / 2, 0);
-            int miniRectMinWidth = Math.min(miniRectWidth, width - 1);
-            int miniRectMinHeight = Math.min(miniRectHeight, height - 1);
-            // Prevent the rect from overlapping the bigger adjust rect
-            if(miniRectMaxX + miniRectMinWidth > width - 1) {
-                miniRectMaxX = width - miniRectMinWidth - 1;
-            }
-            if(miniRectMaxY + miniRectMinHeight > height - 1) {
-                miniRectMaxY = height - miniRectMinHeight - 1;
-            }
-            // Draw the rect.
-            g.drawRect(miniRectMaxX, miniRectMaxY, miniRectMinWidth, miniRectMinHeight);
-            // Draw an additional rect, if the whole map is shown on the minimap
-            if (adjustX > 0 && adjustY > 0) {
-                g.setColor(ResourceManager.getColor("color.border.MiniMap"));
-                g.drawRect(0, 0, width - 1, height - 1);
-            }
-        }
-        g.setTransform(originTransform);
-    }
+	}
 
 
     private void focus(int x, int y) {

@@ -128,23 +128,7 @@ public class BuildingPanel extends MigPanel implements PropertyChangeListener {
         final Colony colony = building.getColony();
         ProductionLabel productionOutput = null;
         ProductionInfo info = building.getProductionInfo();
-        if (info != null && !info.getProduction().isEmpty()) {
-            AbstractGoods output = info.getProduction().get(0);
-            if (output.getAmount() > 0) {
-                if (building.hasAbility(Ability.AVOID_EXCESS_PRODUCTION)) {
-                    int stored = colony.getGoodsCount(output.getType());
-                    int capacity = colony.getWarehouseCapacity();
-                    if (output.getAmount() + stored > capacity) {
-                        output = new AbstractGoods(output.getType(),
-                                                   capacity - stored);
-                    }
-                }
-                AbstractGoods maximum = info.getMaximumProduction().isEmpty()
-                    ? output : info.getMaximumProduction().get(0);
-                productionOutput = new ProductionLabel(freeColClient, output,
-                                                       maximum.getAmount());
-            }
-        }
+        productionOutput = infoNotEmpty(colony, productionOutput, info);
         JLabel upkeep = null;
         if (building.getSpecification().getBoolean(GameOptions.ENABLE_UPKEEP)
             && building.getType().getUpkeep() > 0) {
@@ -161,11 +145,7 @@ public class BuildingPanel extends MigPanel implements PropertyChangeListener {
             add(upkeep);
         }
 
-        for (Unit unit : building.getUnitList()) {
-            UnitLabel unitLabel = new UnitLabel(freeColClient, unit, true);
-            unitLabels.add(unitLabel);
-            add(unitLabel);
-        }
+        formUnitList();
 
         ImageLibrary lib = freeColClient.getGUI().getImageLibrary();
         Image buildingImage = lib.getBuildingImage(building);
@@ -174,6 +154,37 @@ public class BuildingPanel extends MigPanel implements PropertyChangeListener {
         revalidate();
         repaint();
     }
+
+
+	protected void formUnitList() {
+		for (Unit unit : building.getUnitList()) {
+            UnitLabel unitLabel = new UnitLabel(freeColClient, unit, true);
+            unitLabels.add(unitLabel);
+            add(unitLabel);
+        }
+	}
+
+
+	protected ProductionLabel infoNotEmpty(final Colony colony, ProductionLabel productionOutput, ProductionInfo info) {
+		if (info != null && !info.getProduction().isEmpty()) {
+            AbstractGoods output = info.getProduction().get(0);
+            if (output.getAmount() > 0) {
+                if (building.hasAbility(Ability.AVOID_EXCESS_PRODUCTION)) {
+                    int stored = colony.getGoodsCount(output.getType());
+                    int capacity = colony.getWarehouseCapacity();
+                    if (output.getAmount() + stored > capacity) {
+                        output = new AbstractGoods(output.getType(),
+                                                   capacity - stored);
+                    }
+                }
+                AbstractGoods maximum = info.getMaximumProduction().isEmpty()
+                    ? output : info.getMaximumProduction().get(0);
+                productionOutput = new ProductionLabel(freeColClient, output,
+                                                       maximum.getAmount());
+            }
+        }
+		return productionOutput;
+	}
 
 
     /**

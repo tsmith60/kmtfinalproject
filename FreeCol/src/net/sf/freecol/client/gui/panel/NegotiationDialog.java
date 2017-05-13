@@ -858,58 +858,7 @@ public final class NegotiationDialog extends FreeColDialog<DiplomaticTrade> {
 
         StringTemplate tutorial = null;
         TradeContext context = agreement.getContext();
-        switch (context) {
-        case CONTACT:
-            if (freeColClient.tutorialMode()) {
-                tutorial = StringTemplate.key("negotiationDialog.contact.tutorial");
-            }
-            this.stancePanel = new StanceTradeItemPanel(player, otherPlayer);
-            this.inciteOfferPanel = new InciteTradeItemPanel(player, otherPlayer);
-            this.inciteDemandPanel = new InciteTradeItemPanel(otherPlayer, player);
-            break;
-        case DIPLOMATIC:
-            this.stancePanel = new StanceTradeItemPanel(player, otherPlayer);
-            this.colonyDemandPanel = new ColonyTradeItemPanel(otherPlayer);
-            this.colonyOfferPanel = new ColonyTradeItemPanel(player);
-            this.goodsDemandPanel = this.goodsOfferPanel = null;
-            this.inciteOfferPanel = new InciteTradeItemPanel(player, otherPlayer);
-            this.inciteDemandPanel = new InciteTradeItemPanel(otherPlayer, player);
-            this.unitOfferPanel = this.unitDemandPanel = null;
-            break;
-        case TRADE:
-            this.stancePanel = null;
-            this.colonyDemandPanel = this.colonyOfferPanel = null;
-            GoodsLocation gl = (otherUnit != null) ? otherUnit : otherColony;
-            List<Goods> goods = getAnyGoods(gl);
-            this.goodsDemandPanel = new GoodsTradeItemPanel(otherPlayer, goods);
-            gl = (ourUnit != null) ? ourUnit : ourColony;
-            goods = (ourUnit != null) ? ourUnit.getGoodsList()
-                : ourColony.getCompactGoods();
-            for (Goods g : goods) {
-                if (g.getAmount() > GoodsContainer.CARGO_SIZE) {
-                    g.setAmount(GoodsContainer.CARGO_SIZE);
-                }
-                g.setLocation(gl);
-            }
-            this.goodsOfferPanel = new GoodsTradeItemPanel(player, goods);
-            this.inciteOfferPanel = this.inciteDemandPanel = null;
-            this.unitDemandPanel = new UnitTradeItemPanel(otherPlayer,
-                    getUnitUnitList(null));
-            this.unitOfferPanel = new UnitTradeItemPanel(player,
-                ((ourUnit != null) ? getUnitUnitList(ourUnit)
-                    : ourColony.getUnitList()));
-            break;
-        case TRIBUTE:
-            this.stancePanel = new StanceTradeItemPanel(player, otherPlayer);
-            this.colonyDemandPanel = this.colonyOfferPanel = null;
-            this.goodsDemandPanel = this.goodsOfferPanel = null;
-            this.inciteOfferPanel = new InciteTradeItemPanel(player, otherPlayer);
-            this.inciteDemandPanel = new InciteTradeItemPanel(otherPlayer, player);
-            this.unitOfferPanel = this.unitDemandPanel = null;
-            break;
-        default:
-            throw new IllegalStateException("Bogus trade context: " + context);
-        }
+        tutorial = tradeSwitch(freeColClient, player, ourUnit, ourColony, otherUnit, otherColony, tutorial, context);
 
         this.summary = new MigPanel(new MigLayout("wrap 2", "[20px:n:n][]"));
         this.summary.setOpaque(false);
@@ -998,6 +947,65 @@ public final class NegotiationDialog extends FreeColDialog<DiplomaticTrade> {
             : getImageLibrary().getUnitImage(otherUnit));
         initializeDialog(frame, DialogType.QUESTION, true, panel, icon, c);
     }
+
+
+	protected StringTemplate tradeSwitch(FreeColClient freeColClient, final Player player, final Unit ourUnit,
+			final Colony ourColony, final Unit otherUnit, final Colony otherColony, StringTemplate tutorial,
+			TradeContext context) {
+		switch (context) {
+        case CONTACT:
+            if (freeColClient.tutorialMode()) {
+                tutorial = StringTemplate.key("negotiationDialog.contact.tutorial");
+            }
+            this.stancePanel = new StanceTradeItemPanel(player, otherPlayer);
+            this.inciteOfferPanel = new InciteTradeItemPanel(player, otherPlayer);
+            this.inciteDemandPanel = new InciteTradeItemPanel(otherPlayer, player);
+            break;
+        case DIPLOMATIC:
+            this.stancePanel = new StanceTradeItemPanel(player, otherPlayer);
+            this.colonyDemandPanel = new ColonyTradeItemPanel(otherPlayer);
+            this.colonyOfferPanel = new ColonyTradeItemPanel(player);
+            this.goodsDemandPanel = this.goodsOfferPanel = null;
+            this.inciteOfferPanel = new InciteTradeItemPanel(player, otherPlayer);
+            this.inciteDemandPanel = new InciteTradeItemPanel(otherPlayer, player);
+            this.unitOfferPanel = this.unitDemandPanel = null;
+            break;
+        case TRADE:
+            this.stancePanel = null;
+            this.colonyDemandPanel = this.colonyOfferPanel = null;
+            GoodsLocation gl = (otherUnit != null) ? otherUnit : otherColony;
+            List<Goods> goods = getAnyGoods(gl);
+            this.goodsDemandPanel = new GoodsTradeItemPanel(otherPlayer, goods);
+            gl = (ourUnit != null) ? ourUnit : ourColony;
+            goods = (ourUnit != null) ? ourUnit.getGoodsList()
+                : ourColony.getCompactGoods();
+            for (Goods g : goods) {
+                if (g.getAmount() > GoodsContainer.CARGO_SIZE) {
+                    g.setAmount(GoodsContainer.CARGO_SIZE);
+                }
+                g.setLocation(gl);
+            }
+            this.goodsOfferPanel = new GoodsTradeItemPanel(player, goods);
+            this.inciteOfferPanel = this.inciteDemandPanel = null;
+            this.unitDemandPanel = new UnitTradeItemPanel(otherPlayer,
+                    getUnitUnitList(null));
+            this.unitOfferPanel = new UnitTradeItemPanel(player,
+                ((ourUnit != null) ? getUnitUnitList(ourUnit)
+                    : ourColony.getUnitList()));
+            break;
+        case TRIBUTE:
+            this.stancePanel = new StanceTradeItemPanel(player, otherPlayer);
+            this.colonyDemandPanel = this.colonyOfferPanel = null;
+            this.goodsDemandPanel = this.goodsOfferPanel = null;
+            this.inciteOfferPanel = new InciteTradeItemPanel(player, otherPlayer);
+            this.inciteDemandPanel = new InciteTradeItemPanel(otherPlayer, player);
+            this.unitOfferPanel = this.unitDemandPanel = null;
+            break;
+        default:
+            throw new IllegalStateException("Bogus trade context: " + context);
+        }
+		return tutorial;
+	}
 
 
     /**

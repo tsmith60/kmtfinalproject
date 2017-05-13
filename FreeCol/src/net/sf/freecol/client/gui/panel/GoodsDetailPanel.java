@@ -87,31 +87,7 @@ public class GoodsDetailPanel extends ColopediaGameObjectTypePanel<GoodsType> {
         panel.add(name, "span, align center, wrap 40");
 
         if (type.isFarmed()) {
-            List<TileImprovementType> improvements = new ArrayList<>();
-            List<Modifier> modifiers = new ArrayList<>();
-            for (TileImprovementType improvementType :
-                     getSpecification().getTileImprovementTypeList()) {
-                Modifier productionModifier = improvementType.getProductionModifier(type);
-                if (productionModifier != null) {
-                    improvements.add(improvementType);
-                    modifiers.add(productionModifier);
-                }
-            }
-
-            panel.add(Utility.localizedLabel("colopedia.goods.improvedBy"),
-                      "newline 20, top");
-            if (improvements.isEmpty()) {
-                panel.add(Utility.localizedLabel("none"), "span");
-            } else {
-                for (int index = 0; index < improvements.size(); index++) {
-                    String constraints = (index == 0) ? "span" : "skip, span";
-                    panel.add(Utility.localizedLabel(StringTemplate
-                            .template("colopedia.goods.improvement")
-                            .addName("%name%", improvements.get(index))
-                            .addName("%amount%", ModifierFormat.getModifierAsString(modifiers.get(index)))),
-                        constraints);
-                }
-            }
+            handleIsFarmed(panel, type);
         } else {
             panel.add(Utility.localizedLabel("colopedia.goods.madeFrom"), "newline 20");
             if (type.isRefined()) {
@@ -134,64 +110,17 @@ public class GoodsDetailPanel extends ColopediaGameObjectTypePanel<GoodsType> {
             List<BuildingType> buildingTypes = new ArrayList<>();
             boolean allTypes = filterBuildables(getSpecification().getBuildingTypeList(), buildingTypes, type);
             if (!buildingTypes.isEmpty()) {
-                panel.add(Utility.localizedLabel("colopedia.goods.buildings"),
-                          "newline 20");
-                if (allTypes) {
-                    JButton button = getButton(PanelType.BUILDINGS,
-                                               Messages.message("colopedia.goods.allBuildings"),
-                                               null);
-                    panel.add(button, "span");
-                } else {
-                    int count = 0;
-                    for (BuildingType building : buildingTypes) {
-                        JButton label = getButton(building);
-                        if (count > 0 && count % 3 == 0) {
-                            panel.add(label, "skip");
-                        } else {
-                            panel.add(label);
-                        }
-                        count++;
-                    }
-                }
+                handleNonEmptyBuilding(panel, buildingTypes, allTypes);
             }
             List<Role> roles = new ArrayList<>();
             allTypes = filterBuildables(getSpecification().getRoles(), roles, type);
             if (!roles.isEmpty()) {
-                panel.add(Utility.localizedLabel("colopedia.goods.equipment"),
-                          "newline 20");
-                int count = 0;
-                for (Role role : roles) {
-                    JLabel label = Utility.localizedLabel(Messages.getName(role));
-                    if (count > 0 && count % 3 == 0) {
-                        panel.add(label, "skip");
-                    } else {
-                        panel.add(label);
-                    }
-                    count++;
-                }
+                handleRoleNotEmpty(panel, roles);
             }
             List<UnitType> unitTypes = new ArrayList<>();
             allTypes = filterBuildables(getSpecification().getUnitTypeList(), unitTypes, type);
             if (!unitTypes.isEmpty()) {
-                panel.add(Utility.localizedLabel("colopedia.goods.units"),
-                          "newline 20");
-                if (allTypes) {
-                    JButton button = getButton(PanelType.UNITS,
-                                               Messages.message("colopedia.goods.allUnits"),
-                                               null);
-                    panel.add(button, "span");
-                } else {
-                    int count = 0;
-                    for (UnitType unit : unitTypes) {
-                        JButton label = getButton(unit);
-                        if (count > 0 && count % 3 == 0) {
-                            panel.add(label, "skip");
-                        } else {
-                            panel.add(label);
-                        }
-                        count++;
-                    }
-                }
+                handleNonEmptyUnitType(panel, allTypes, unitTypes);
             }
         }
 
@@ -206,6 +135,97 @@ public class GoodsDetailPanel extends ColopediaGameObjectTypePanel<GoodsType> {
         panel.add(Utility.localizedTextArea(Messages.descriptionKey(type), 30),
                   "span, growx");
     }
+
+
+	protected void handleNonEmptyUnitType(JPanel panel, boolean allTypes, List<UnitType> unitTypes) {
+		panel.add(Utility.localizedLabel("colopedia.goods.units"),
+		          "newline 20");
+		if (allTypes) {
+		    JButton button = getButton(PanelType.UNITS,
+		                               Messages.message("colopedia.goods.allUnits"),
+		                               null);
+		    panel.add(button, "span");
+		} else {
+		    int count = 0;
+		    for (UnitType unit : unitTypes) {
+		        JButton label = getButton(unit);
+		        if (count > 0 && count % 3 == 0) {
+		            panel.add(label, "skip");
+		        } else {
+		            panel.add(label);
+		        }
+		        count++;
+		    }
+		}
+	}
+
+
+	protected void handleRoleNotEmpty(JPanel panel, List<Role> roles) {
+		panel.add(Utility.localizedLabel("colopedia.goods.equipment"),
+		          "newline 20");
+		int count = 0;
+		for (Role role : roles) {
+		    JLabel label = Utility.localizedLabel(Messages.getName(role));
+		    if (count > 0 && count % 3 == 0) {
+		        panel.add(label, "skip");
+		    } else {
+		        panel.add(label);
+		    }
+		    count++;
+		}
+	}
+
+
+	protected void handleNonEmptyBuilding(JPanel panel, List<BuildingType> buildingTypes, boolean allTypes) {
+		panel.add(Utility.localizedLabel("colopedia.goods.buildings"),
+		          "newline 20");
+		if (allTypes) {
+		    JButton button = getButton(PanelType.BUILDINGS,
+		                               Messages.message("colopedia.goods.allBuildings"),
+		                               null);
+		    panel.add(button, "span");
+		} else {
+		    int count = 0;
+		    for (BuildingType building : buildingTypes) {
+		        JButton label = getButton(building);
+		        if (count > 0 && count % 3 == 0) {
+		            panel.add(label, "skip");
+		        } else {
+		            panel.add(label);
+		        }
+		        count++;
+		    }
+		}
+	}
+
+
+	protected void handleIsFarmed(JPanel panel, GoodsType type) {
+		List<TileImprovementType> improvements = new ArrayList<>();
+		List<Modifier> modifiers = new ArrayList<>();
+		for (TileImprovementType improvementType :
+		         getSpecification().getTileImprovementTypeList()) {
+		    Modifier productionModifier = improvementType.getProductionModifier(type);
+		    if (productionModifier != null) {
+		        improvements.add(improvementType);
+		        modifiers.add(productionModifier);
+		    }
+		}
+
+		panel.add(Utility.localizedLabel("colopedia.goods.improvedBy"),
+		          "newline 20, top");
+		if (improvements.isEmpty()) {
+		    panel.add(Utility.localizedLabel("none"), "span");
+		} else {
+		    for (int index = 0; index < improvements.size(); index++) {
+		        String constraints = (index == 0) ? "span" : "skip, span";
+		        panel.add(Utility.localizedLabel(StringTemplate
+		                .template("colopedia.goods.improvement")
+		                .addName("%name%", improvements.get(index))
+		                .addName("%amount%", ModifierFormat.getModifierAsString(modifiers.get(index)))),
+		            constraints);
+		    }
+		}
+	}
 
 
     private <T extends BuildableType> boolean filterBuildables(List<T> input,

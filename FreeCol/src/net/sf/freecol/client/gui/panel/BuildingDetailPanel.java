@@ -136,64 +136,14 @@ public class BuildingDetailPanel
         panel.add(name, "span, align center, wrap 40");
 
         // Requires - prerequisites to build
-        JTextPane textPane = Utility.getDefaultTextPane();
-        StyledDocument doc = textPane.getStyledDocument();
-
-        try {
-            if (buildingType.getUpgradesFrom() != null) {
-                StyleConstants.setComponent(doc.getStyle("button"), getButton(buildingType.getUpgradesFrom()));
-                doc.insertString(doc.getLength(), " ", doc.getStyle("button"));
-                doc.insertString(doc.getLength(), "\n", doc.getStyle("regular"));
-            }
-            if (buildingType.getRequiredPopulation() > 0) {
-                StringTemplate template = StringTemplate.template("colopedia.buildings.requiredPopulation")
-                    .addAmount("%number%", buildingType.getRequiredPopulation());
-                doc.insertString(doc.getLength(),
-                                 Messages.message(template) + "\n",
-                                 doc.getStyle("regular"));
-            }
-            appendRequiredAbilities(doc, buildingType);
-
-            panel.add(Utility.localizedLabel("colopedia.buildings.requires"), "top");
-            panel.add(textPane, "span, growx");
-        } catch (BadLocationException e) {
-            //logger.warning(e.toString());
-        }
+        prereqBuild(panel, buildingType);
 
         // Costs to build - Hammers & Tools
-        panel.add(Utility.localizedLabel("colopedia.buildings.cost"));
-        if (!buildingType.needsGoodsToBuild()) {
-            panel.add(Utility.localizedLabel("colopedia.buildings.autoBuilt"), "span");
-        } else {
-            List<AbstractGoods> required = buildingType.getRequiredGoods();
-            AbstractGoods goodsRequired = required.get(0);
-            if (required.size() > 1) {
-                panel.add(getGoodsButton(goodsRequired.getType(), goodsRequired.getAmount()),
-                                "span, split " + required.size());
-
-                for (int index = 1; index < required.size(); index++) {
-                    goodsRequired = required.get(index);
-                    panel.add(getGoodsButton(goodsRequired.getType(), goodsRequired.getAmount()));
-                }
-            } else {
-                panel.add(getGoodsButton(goodsRequired.getType(), goodsRequired.getAmount()), "span");
-            }
-        }
+        buildCosts(panel, buildingType);
 
         // Production - Needs & Produces
         if (buildingType.hasAbility(Ability.TEACH)) {
-            panel.add(Utility.localizedLabel("colopedia.buildings.teaches"), "newline, top");
-            int count = 0;
-            for (UnitType unitType2 : getSpecification().getUnitTypeList()) {
-                if (buildingType.canAdd(unitType2)) {
-                    if (count > 0 && count % 3 == 0) {
-                        panel.add(getButton(unitType2), "skip, span 2");
-                    } else {
-                        panel.add(getButton(unitType2), "span 2");
-                    }
-                    count++;
-                }
-            }
+            panelProduce(panel, buildingType);
 
         } else {
             for (ProductionType pt
@@ -232,7 +182,83 @@ public class BuildingDetailPanel
             }
         }
 
-        List<JComponent> labels = new ArrayList<>();
+        specialistHelp(panel, buildingType);
+
+        // Notes
+        panel.add(Utility.localizedLabel("colopedia.buildings.notes"),
+                  "newline 20, top");
+        panel.add(Utility.localizedTextArea(Messages.descriptionKey(buildingType)),
+                  "span, growx");
+    }
+
+
+	protected void buildCosts(JPanel panel, BuildingType buildingType) {
+		panel.add(Utility.localizedLabel("colopedia.buildings.cost"));
+        if (!buildingType.needsGoodsToBuild()) {
+            panel.add(Utility.localizedLabel("colopedia.buildings.autoBuilt"), "span");
+        } else {
+            List<AbstractGoods> required = buildingType.getRequiredGoods();
+            AbstractGoods goodsRequired = required.get(0);
+            if (required.size() > 1) {
+                panel.add(getGoodsButton(goodsRequired.getType(), goodsRequired.getAmount()),
+                                "span, split " + required.size());
+
+                for (int index = 1; index < required.size(); index++) {
+                    goodsRequired = required.get(index);
+                    panel.add(getGoodsButton(goodsRequired.getType(), goodsRequired.getAmount()));
+                }
+            } else {
+                panel.add(getGoodsButton(goodsRequired.getType(), goodsRequired.getAmount()), "span");
+            }
+        }
+	}
+
+
+	protected void prereqBuild(JPanel panel, BuildingType buildingType) {
+		JTextPane textPane = Utility.getDefaultTextPane();
+        StyledDocument doc = textPane.getStyledDocument();
+
+        try {
+            if (buildingType.getUpgradesFrom() != null) {
+                StyleConstants.setComponent(doc.getStyle("button"), getButton(buildingType.getUpgradesFrom()));
+                doc.insertString(doc.getLength(), " ", doc.getStyle("button"));
+                doc.insertString(doc.getLength(), "\n", doc.getStyle("regular"));
+            }
+            if (buildingType.getRequiredPopulation() > 0) {
+                StringTemplate template = StringTemplate.template("colopedia.buildings.requiredPopulation")
+                    .addAmount("%number%", buildingType.getRequiredPopulation());
+                doc.insertString(doc.getLength(),
+                                 Messages.message(template) + "\n",
+                                 doc.getStyle("regular"));
+            }
+            appendRequiredAbilities(doc, buildingType);
+
+            panel.add(Utility.localizedLabel("colopedia.buildings.requires"), "top");
+            panel.add(textPane, "span, growx");
+        } catch (BadLocationException e) {
+            //logger.warning(e.toString());
+        }
+	}
+
+
+	protected void panelProduce(JPanel panel, BuildingType buildingType) {
+		panel.add(Utility.localizedLabel("colopedia.buildings.teaches"), "newline, top");
+		int count = 0;
+		for (UnitType unitType2 : getSpecification().getUnitTypeList()) {
+		    if (buildingType.canAdd(unitType2)) {
+		        if (count > 0 && count % 3 == 0) {
+		            panel.add(getButton(unitType2), "skip, span 2");
+		        } else {
+		            panel.add(getButton(unitType2), "span 2");
+		        }
+		        count++;
+		    }
+		}
+	}
+
+
+	protected void specialistHelp(JPanel panel, BuildingType buildingType) {
+		List<JComponent> labels = new ArrayList<>();
         for (Modifier productionBonus : buildingType.getModifiers()) {
             JComponent component = getModifierComponent(productionBonus);
             if (component instanceof JButton) {
@@ -250,25 +276,24 @@ public class BuildingDetailPanel
         }
 
         if (!labels.isEmpty()) {
-            panel.add(Utility.localizedLabel(StringTemplate
-                    .template("colopedia.buildings.modifiers")
-                    .addAmount("%number%", labels.size())),
-                "newline, top");
-            int count = 0;
-            for (JComponent component : labels) {
-                if (count > 0 && count % 2 == 0) {
-                    panel.add(component, "skip, span 3");
-                } else {
-                    panel.add(component, "span 3");
-                }
-                count++;
-            }
+            panelFill(panel, labels);
         }
+	}
 
-        // Notes
-        panel.add(Utility.localizedLabel("colopedia.buildings.notes"),
-                  "newline 20, top");
-        panel.add(Utility.localizedTextArea(Messages.descriptionKey(buildingType)),
-                  "span, growx");
-    }
+
+	protected void panelFill(JPanel panel, List<JComponent> labels) {
+		panel.add(Utility.localizedLabel(StringTemplate
+		        .template("colopedia.buildings.modifiers")
+		        .addAmount("%number%", labels.size())),
+		    "newline, top");
+		int count = 0;
+		for (JComponent component : labels) {
+		    if (count > 0 && count % 2 == 0) {
+		        panel.add(component, "skip, span 3");
+		    } else {
+		        panel.add(component, "span 3");
+		    }
+		    count++;
+		}
+	}
 }
