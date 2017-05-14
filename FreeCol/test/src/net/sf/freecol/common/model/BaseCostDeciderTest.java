@@ -21,6 +21,7 @@ package net.sf.freecol.common.model;
 import net.sf.freecol.common.model.Map;
 import net.sf.freecol.common.model.Stance;
 import net.sf.freecol.common.model.pathfinding.CostDecider;
+import net.sf.freecol.common.model.pathfinding.BaseCostDecider;
 import net.sf.freecol.common.model.pathfinding.CostDeciders;
 import net.sf.freecol.common.option.BooleanOption;
 import net.sf.freecol.server.model.ServerUnit;
@@ -74,6 +75,23 @@ public class BaseCostDeciderTest extends FreeColTestCase {
             assertNotNull(end);
             int cost = decider.getCost(unit, start, game.getMap().getTile(5, 6),
                                        100);
+            assertEquals(plainsType.getBasicMoveCost(), cost);
+        }
+    }
+    
+    public void testDetermineMoveDirection(){
+    	final BaseCostDecider costDecider = new BaseCostDecider();
+    	Map map = getTestMap(plainsType);
+        game.setMap(map);
+    
+        Tile start = game.getMap().getTile(5, 5);
+        Unit unit = new ServerUnit(game, start, game.getCurrentPlayer(),
+                                   pioneerType);
+        for (Direction dir : Direction.values()) {
+            Tile end = start.getNeighbourOrNull(dir);
+            assertNotNull(end);
+            int cost = costDecider.determineMoveDirection(unit, 3,0, game.getMap().getTile(5, 5),
+            		game.getMap().getTile(5, 6),true);
             assertEquals(plainsType.getBasicMoveCost(), cost);
         }
     }
