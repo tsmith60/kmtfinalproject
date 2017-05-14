@@ -9,3 +9,4 @@
 *.so
 *.txt
 *.xml
+/net/
