@@ -1,12 +1,1 @@
-# Compiled source #
-###################
-*.com
-*.html
-*.class
-*.dll
-*.exe
-*.o
-*.so
-*.txt
-*.xml
 /net/

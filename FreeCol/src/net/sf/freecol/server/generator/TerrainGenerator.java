@@ -246,15 +246,15 @@ public class TerrainGenerator {
         List<TileType> candidateTileTypes = new ArrayList<>(candidates);
 
         // Filter the candidates by temperature.
-        int i = 0;
-        while (i < candidateTileTypes.size()) {
-            TileType type = candidateTileTypes.get(i);
-            if (!type.withinRange(TileType.RangeType.TEMPERATURE,
-                                  localeTemperature)) {
-                candidateTileTypes.remove(i);
-                continue;
-            }
-            i++;
+        int i = 0; 
+        for (i = 0; i < candidateTileTypes.size(); i++)
+        {
+        	TileType type = candidateTileTypes.get(i);
+        	if (!type.withinRange(TileType.RangeType.TEMPERATURE, localeTemperature))
+        	{
+        		candidateTileTypes.remove(i);
+        		continue; 
+        	}
         }
 
         // Need to continue?
@@ -269,15 +269,15 @@ public class TerrainGenerator {
         }
 
         // Filter the candidates by humidity.
-        i = 0;
-        while (i < candidateTileTypes.size()) {
-            TileType type = candidateTileTypes.get(i);
-            if (!type.withinRange(TileType.RangeType.HUMIDITY,
-                                  localeHumidity)) {
+        for (i = 0; i < candidateTileTypes.size(); i++)
+        {
+        	TileType type = candidateTileTypes.get(i);
+            if (!type.withinRange(TileType.RangeType.HUMIDITY, localeHumidity)) 
+            {
                 candidateTileTypes.remove(i);
                 continue;
             }
-            i++;
+        	
         }
 
         // Need to continue?
@@ -293,14 +293,14 @@ public class TerrainGenerator {
 
         // Filter the candidates by forest presence.
         boolean forested = randomInt(logger, "Forest", random, 100) < forestChance;
-        i = 0;
-        while (i < candidateTileTypes.size()) {
-            TileType type = candidateTileTypes.get(i);
-            if (type.isForested() != forested) {
+        for (i = 0; i < candidateTileTypes.size(); i++)
+        {
+        	TileType type = candidateTileTypes.get(i);
+            if (type.isForested() != forested) 
+            {
                 candidateTileTypes.remove(i);
                 continue;
             }
-            i++;
         }
 
         // Done
@@ -431,7 +431,7 @@ public class TerrainGenerator {
 
         // Create ServerRegions for all land regions
         ServerRegion[] landregions = new ServerRegion[continents+1];
-        int landIndex = 1;
+        //int landIndex = 1;
         for (int c = 1; c <= continents; c++) {
             // c starting at 1, c=0 is all water tiles
             landregions[c] = new ServerRegion(game, RegionType.LAND);
@@ -473,10 +473,10 @@ public class TerrainGenerator {
     private Tile getGoodMountainTile(Map map) {
         final TileType hills = spec.getTileType("model.tile.hills");
         final TileType mountains = spec.getTileType("model.tile.mountains");
-        Tile tile = null;
-        while ((tile = map.getRandomLandTile(random)) != null) {
+        Tile tile = map.getRandomLandTile(random);
+        while (tile != null) { 
             // Can not be high ground already
-            if (tile.getType() != hills && tile.getType() != mountains
+            if (!tile.getType().equals(hills) && !tile.getType().equals(mountains)
                 
                 // Not too close to a mountain range as this would
                 // defeat the purpose of adding random hills
@@ -544,7 +544,7 @@ public class TerrainGenerator {
                 counter++;
                 for (Tile neighbour : nextTile.getSurroundingTiles(1)) {
                     if (!neighbour.isLand()
-                        || neighbour.getType() == mountains) continue;
+                        || neighbour.getType().equals(mountains)) continue;
                     int r = randomInt(logger, "MSiz", random, 8);
                     if (r == 0) {
                         neighbour.setType(mountains);
@@ -651,7 +651,7 @@ public class TerrainGenerator {
      * @return A list of created <code>ServerRegion</code>s.
      */
     private List<ServerRegion> createLakeRegions(Map map, LogBuilder lb) {
-        final TileType lakeType = spec.getTileType("model.tile.lake");
+        //final TileType lakeType = spec.getTileType("model.tile.lake");
 
         // Create the water map, and find any tiles that are water but
         // not part of any region (such as the oceans).  These are
@@ -691,7 +691,7 @@ public class TerrainGenerator {
             .getTileType("model.tile.lake");
         List<Tile> todo = new ArrayList<>();
         List<ServerRegion> result = new ArrayList<>();
-        int lakeCount = 0;
+        //int lakeCount = 0;
         while (!lakes.isEmpty()) {
             Tile tile = lakes.get(0);
             if (tile.getRegion() != null) continue;
