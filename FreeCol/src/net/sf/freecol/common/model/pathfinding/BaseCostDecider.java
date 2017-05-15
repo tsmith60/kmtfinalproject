@@ -33,7 +33,7 @@ import net.sf.freecol.common.model.Unit;
  * {@link net.sf.freecol.common.model.Map#search} 
  * if no other <code>CostDecider</code> has been specified.
  */
-class BaseCostDecider implements CostDecider {
+public class BaseCostDecider implements CostDecider {
 
     /** The number of moves left following a proposed move. */
     protected int movesLeft;
