@@ -5363,6 +5363,13 @@ net.sf.freecol.common.model.NationType
 net.sf.freecol.common.model.GameTest
 net.sf.freecol.server.model.ServerPlayer
 net.sf.freecol.common.model.Game
+||:net.sf.freecol.client.gui.MapViewerTest$1
+java.lang.Object
+java.lang.String
+net.sf.freecol.client.gui.MapViewerTest
+java.io.FileFilter
+java.io.File
+net.sf.freecol.client.gui.MapViewerTest$1
 ||:net.sf.freecol.client.gui.option.BooleanOptionUI
 net.sf.freecol.common.option.BooleanOption
 net.sf.freecol.client.gui.option.BooleanOptionUI
@@ -6241,6 +6248,20 @@ java.lang.String
 net.sf.freecol.common.util.Xml
 java.lang.RuntimeException
 net.sf.freecol.common.util.Xml$Exception
+||:net.sf.freecol.client.gui.MapViewerTest 2
+java.lang.StringBuilder
+net.sf.freecol.client.gui.MapViewerTest 2
+java.util.Set
+net.sf.freecol.util.test.FreeColTestCase
+java.lang.Character
+java.util.Iterator
+java.util.HashMap
+java.util.Map
+net.sf.freecol.client.gui.MapViewerTest$1
+java.util.Map$Entry
+java.lang.String
+java.awt.Font
+java.lang.Exception
 ||:net.sf.freecol.server.model.ServerColonyTest
 java.lang.StringBuilder
 net.sf.freecol.common.model.Unit
@@ -10481,6 +10502,21 @@ net.sf.freecol.common.model.TileImprovementType
 java.lang.String
 net.sf.freecol.common.model.TileType
 net.sf.freecol.common.model.TileImprovement
+||:net.sf.freecol.client.gui.MapViewerTest
+net.sf.freecol.client.gui.MapViewerTest
+net.sf.freecol.client.FreeColClient
+net.sf.freecol.server.model.ServerUnit
+net.sf.freecol.client.gui.MapViewer
+net.sf.freecol.util.test.FreeColTestCase
+net.sf.freecol.client.control.PreGameController
+net.sf.freecol.client.ClientTestHelper
+net.sf.freecol.common.model.Tile
+net.sf.freecol.server.ServerTestHelper
+net.sf.freecol.common.model.Specification
+java.lang.Throwable
+net.sf.freecol.common.model.Map
+net.sf.freecol.common.model.Game
+java.lang.Exception
 ||:net.sf.freecol.client.gui.action.AboutAction
 net.sf.freecol.client.gui.action.AboutAction
 javax.swing.Action
