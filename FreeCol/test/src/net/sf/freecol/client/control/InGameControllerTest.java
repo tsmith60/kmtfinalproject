@@ -157,4 +157,10 @@ public class InGameControllerTest  extends FreeColTestCase {
 	             if (client != null) ClientTestHelper.stopClient(client);
 	         }
 	    }
+	  
+	  @Override
+	    public void tearDown() throws Exception {
+	        ServerTestHelper.stopServerGame();
+	        super.tearDown();
+	    }
 }
