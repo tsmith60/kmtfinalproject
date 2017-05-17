@@ -342,6 +342,9 @@ public class Messages {
         return message(nameKey(id));
     }
 
+    public static String getName2nd(String id) {
+        return id;
+    }
     public static String getName(Named named) {
         return message(named.getNameKey());
     }

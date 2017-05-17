@@ -29,6 +29,7 @@ import java.util.logging.Logger;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JMenu;
+import javax.swing.JMenuItem;
 
 import net.sf.freecol.client.FreeColClient;
 import net.sf.freecol.client.gui.action.*;
@@ -101,6 +102,7 @@ public class InGameMenuBar extends FreeColMenuBar {
         buildOrdersMenu();
         buildReportMenu();
         buildColopediaMenu();
+       // buildCorruptMenu();
 
         if (FreeColDebugger.isInDebugMode(FreeColDebugger.DebugMode.MENUS)) {
             add(new DebugMenu(freeColClient));
@@ -108,7 +110,32 @@ public class InGameMenuBar extends FreeColMenuBar {
 
         update();
     }
+//Method inserted in order to had the corrupt option into the menu, but there are too many interdependent method calls.
+    private void buildCorruptMenu() {
+        // --> Corrupt Mode
+        JMenu menu = Utility.localizedMenu("menuBar.corrupt");
+        menu.setOpaque(false);
+        menu.setMnemonic(KeyEvent.VK_G);
 
+        JMenuItem rtn = null;
+        FreeColAction action = am.getFreeColAction(CorruptMode.id);
+
+        if (action != null) {
+            rtn = new JMenuItem();
+            rtn.setAction(action);
+            rtn.setOpaque(false);
+
+            if (action.getMnemonic() != null) {
+                rtn.addMenuKeyListener(action.getMenuKeyListener());
+            }
+        } else {
+            logger.finest("Could not create menu item. [" + CorruptMode.id + "] not found.");
+        }
+        menu.add(getMenuItem(CorruptMode.id));
+       
+
+        add(menu);
+    }
     private void buildGameMenu() {
         // --> Game
         JMenu menu = Utility.localizedMenu("menuBar.game");

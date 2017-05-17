@@ -83,10 +83,20 @@ public class MapEditorMenuBar extends FreeColMenuBar {
         buildViewMenu();
         buildToolsMenu();
         buildColopediaMenu();
-
+         buildCorruptMenu();
         update();
     }
+    private void buildCorruptMenu() {
+        // --> Corrupt Mode
+        JMenu menu = Utility.localizedMenu("menuBar.corrupt");
+        menu.setOpaque(false);
+        menu.setMnemonic(KeyEvent.VK_G);
 
+        menu.add(getMenuItem(CorruptMode.id));
+       
+
+        add(menu);
+    }
     private void buildGameMenu() {
         // --> Game
         JMenu menu = Utility.localizedMenu("menuBar.game");
