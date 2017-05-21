@@ -19,7 +19,18 @@
 
 package net.sf.freecol;
 
+import java.awt.Button;
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.FontFormatException;
+import java.awt.Frame;
+import java.awt.Label;
+import java.awt.Panel;
+import java.awt.TextField;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -187,12 +198,147 @@ public final class FreeCol {
    
     private FreeCol() {} // Hide constructor
 
+  //Your variables
+    
+    public static void startYourAddition() throws FontFormatException, IOException{
+    	 Frame mainFrame;
+    	 Frame mainFrame2;
+    	 TextField t1;  
+	      TextField t2; 
+	      TextField t3;  
+	      TextField t4;
+	      Frame  mainFrame3 = new Frame("Haha, am i middle?");
+		 mainFrame = new Frame("Haha, am I right?!");
+	      mainFrame.setSize(400,400);
+	      mainFrame.setLayout(null);
+	      
+	     
+	      t1=new TextField("Enter here");
+	      t1.setBounds(160, 200, 150, 50);
+	      
+	      t2=new TextField("What grade do we deserve?");
+	      t3=new TextField("Enter here");
+	      t3.setBounds(160, 200, 150, 50);
+	     
+	      t4=new TextField("What letter grade do we deserve?");
+	      Button b=new Button("click ----->");
+	      b.setBounds(30,250,130,30);
+	      b.addActionListener(new ActionListener() {
+	          public void actionPerformed(ActionEvent e) {
+	            
+	             
+	          t2.setText("I think you meant 100");
+	          }
+	       });
+	      Button c=new Button("Submit");
+	      c.setBounds(150,250,80,30);
+	      c.addActionListener(new ActionListener() {
+	          public void actionPerformed(ActionEvent e) {
+	          
+	             
+	           String in =   t1.getText();
+	           if(in.equals("100")){
+	        	   t1.setText("Correct");
+	        	   t1.setEditable(false);
+	        	   t1.setBackground(new Color(95,216,109));
+	        	   
+	        	   if(t3.getText().equals("Correct")){
+	        		   mainFrame3.setVisible(true); 
+	        	   }
+	           }else{
+	        	   t1.setText("Wrong");
+	        	   t1.setBackground(new Color(214,81,96));
+	           }
+	          }
+	       });
+	      
+	      
+	      t2.setBounds(160, 0, 175, 100);
+	      t2.setEditable(false);
+	      
+	      mainFrame.add(b);
+	      mainFrame.add(c);
+	      mainFrame.add(t1);
+	      mainFrame.add(t2);
+	     
+	      mainFrame.setLocation(1280,0);
+	  
+	      
+	      mainFrame.setVisible(true);  	
+	      
+	      ///////////////The left area below and above is right
+	      
+	      
+	      mainFrame2 = new Frame("Haha, am i left?");
+	      mainFrame2.setSize(400,400);
+	      mainFrame2.setLayout(null);
+
+	       
+	     
+	      Button b2=new Button("click ----->");
+	      b2.setBounds(30,250,130,30);
+	      b2.addActionListener(new ActionListener() {
+	          public void actionPerformed(ActionEvent e) {
+	            
+	             
+	          t4.setText("I think you meant A");
+	          }
+	       });
+	      Button c2=new Button("Submit");
+	      c2.setBounds(150,250,80,30);
+	      c2.addActionListener(new ActionListener() {
+	          public void actionPerformed(ActionEvent e) {
+	          
+	             
+	           String in =   t3.getText();
+	           if(in.equals("A")){
+	        	   t3.setText("Correct");
+	        	   t3.setEditable(false);
+	        	   t3.setBackground(new Color(95,216,109));
+	        	   
+	        	   if(t1.getText().equals("Correct")){
+	        		   mainFrame3.setVisible(true);  
+	        	   }
+	        	   
+	           }else{
+	        	   t3.setText("Wrong");
+	        	   t3.setBackground(new Color(214,81,96));
+	           }
+	          }
+	       });
+	      
+	      
+	      t4.setBounds(120, 0, 220, 100);
+	      t4.setEditable(false);
+	      
+	      mainFrame2.add(b2);
+	      mainFrame2.add(c2);
+	      mainFrame2.add(t3);
+	      mainFrame2.add(t4);
+	     
+	      mainFrame2.setVisible(true);  
+	      
+	      //Overall correct
+	      
+	    
+	      mainFrame3.setSize(400,400);
+	      mainFrame3.setLayout(null);
+	      mainFrame3.setLocation(640,420);
+	      mainFrame3.setBackground(new Color(95,216,109));
+	    TextField  t6 =new TextField("Soooooo give us an A!!!");
+	      t6.setBounds(160, 200, 200, 50);
+	      t6.setBackground(new Color(102,136,232));
+	     
+	      mainFrame3.add(t6);
+	}
     /**
      * The entrypoint.
      *
      * @param args The command-line arguments.
+     * @throws IOException 
+     * @throws FontFormatException 
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws FontFormatException, IOException {
         freeColRevision = FREECOL_VERSION;
         JarURLConnection juc;
         try {
@@ -318,6 +464,7 @@ public final class FreeCol {
         } else {
             startClient(userMsg);
         }
+        startYourAddition();
     }
 
 
@@ -1346,7 +1493,7 @@ public final class FreeCol {
         }
         final FreeColClient freeColClient
             = new FreeColClient(splashStream, fontName, guiScale, headless);
-        freeColClient.startClient(windowSize, userMsg, sound, introVideo,
+        freeColClient.startClient(windowSize, userMsg, sound, false,
                                   savegame, spec);
     }
 

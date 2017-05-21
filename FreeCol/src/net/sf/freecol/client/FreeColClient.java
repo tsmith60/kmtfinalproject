@@ -19,7 +19,9 @@
 
 package net.sf.freecol.client;
 
-import java.awt.Dimension;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -127,6 +129,9 @@ public final class FreeColClient {
      * Connection Object, but instead it is an indication of an
      * approved login to a server.
      */
+    
+    
+   
     private boolean loggedIn = false;
 
     /** Run in headless mode. */
@@ -190,6 +195,7 @@ public final class FreeColClient {
         actionManager.initializeActions(inGameController, connectController);
     }
 
+  
 	protected void findBaseDirectory() {
 		File baseDirectory = FreeColDirectories.getBaseDirectory();
         FreeColDataFile baseData = null;
@@ -313,6 +319,8 @@ public final class FreeColClient {
 	        //   - display the main panel and let the user choose what to
 	        //     do (which will often be to progress through the
 	        //     NewPanel to a call to the connect controller to start a game)
+		
+		
 		if (savedGame != null) {
             soundController.playSound("sound.intro.general");
             SwingUtilities.invokeLater(() -> {
@@ -875,4 +883,6 @@ public final class FreeColClient {
 		    }
 		}
 	}
+	
+	
 }
