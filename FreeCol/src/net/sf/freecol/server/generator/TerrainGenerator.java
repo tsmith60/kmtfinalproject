@@ -333,6 +333,7 @@ public class TerrainGenerator {
      * @return A list of created <code>ServerRegion</code>s.
      */
     private List<ServerRegion> createLandRegions(Map map, LogBuilder lb) {
+    	
         // Create "explorable" land regions
         int continents = 0;
         boolean[][] landmap = new boolean[map.getWidth()][map.getHeight()];
